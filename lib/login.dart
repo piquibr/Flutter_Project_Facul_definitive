@@ -14,11 +14,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Scaffold(backgroundColor: Colors.white);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      backgroundColor: Colors.white,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -27,67 +24,131 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Image.asset('../lib/assets/iconLogin.png', height: 100),
+                LogoWidget(),
                 SizedBox(height: 20),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Email/Telefone',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, insira seu email ou telefone';
-                    }
-                    return null;
-                  },
-                ),
+                EmailInput(),
                 SizedBox(height: 10),
-                TextFormField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    suffixIcon: Icon(Icons.visibility_off),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, insira sua senha';
-                    }
-                    return null;
-                  },
-                ),
+                PasswordInput(),
                 SizedBox(height: 20),
-                ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        //TODO: Implementar login
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                      textStyle: TextStyle(fontSize: 20),
-                    ),
-                    child:
-                        Text('Entrar', style: TextStyle(color: Colors.white))),
+                LoginButton(onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    // TODO: Implementar login
+                  }
+                }),
                 SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Esqueceu a sua senha?',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                ),
+                ForgotPasswordButton(),
                 SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Crie sua conta aqui!',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                ),
+                CreateAccountButton(),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class LogoWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset('./lib/assets/iconLogin.png', height: 100);
+  }
+}
+
+class EmailInput extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200], // Fundo cinza claro
+        borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
+      ),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: 'Email/Telefone',
+          border: InputBorder.none, // Remove o contorno padrão
+          contentPadding: EdgeInsets.symmetric(horizontal: 10), // Padding interno
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, insira seu email ou telefone';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+}
+
+
+class PasswordInput extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200], // Cor de fundo cinza claro
+        borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
+      ),
+      child: TextFormField(
+        obscureText: true,
+        decoration: InputDecoration(
+          labelText: 'Senha',
+          suffixIcon: Icon(Icons.visibility_off),
+          border: InputBorder.none, // Remove o contorno padrão
+          contentPadding: EdgeInsets.symmetric(horizontal: 10), // Padding interno
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, insira sua senha';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+}
+
+
+class LoginButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  LoginButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+        textStyle: TextStyle(fontSize: 20),
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+      ),
+      child: Text('Entrar', style: TextStyle(color: Colors.white)),
+    );
+  }
+}
+
+class ForgotPasswordButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {},
+      child: Text(
+        'Esqueceu a sua senha?',
+        style: TextStyle(color: Colors.orange),
+      ),
+    );
+  }
+}
+
+class CreateAccountButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {},
+      child: Text(
+        'Crie sua conta aqui!',
+        style: TextStyle(color: Colors.orange),
       ),
     );
   }
