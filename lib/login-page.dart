@@ -1,9 +1,15 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'pages/register-page.dart';
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+  // MyHomePage({Key? key, required this.title}) : super(key: key);
+  static String tag = 'MyHomePage(title: title)';
+  const MyHomePage({super.key});
 
-  final String title;
+
+  //final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -61,13 +67,15 @@ class EmailInput extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[200], // Fundo cinza claro
-        borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
+        borderRadius:
+            BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
       ),
       child: TextFormField(
         decoration: InputDecoration(
           labelText: 'Email/Telefone',
           border: InputBorder.none, // Remove o contorno padrão
-          contentPadding: EdgeInsets.symmetric(horizontal: 10), // Padding interno
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 10), // Padding interno
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -80,14 +88,14 @@ class EmailInput extends StatelessWidget {
   }
 }
 
-
 class PasswordInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[200], // Cor de fundo cinza claro
-        borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
+        borderRadius:
+            BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
       ),
       child: TextFormField(
         obscureText: true,
@@ -95,7 +103,8 @@ class PasswordInput extends StatelessWidget {
           labelText: 'Senha',
           suffixIcon: Icon(Icons.visibility_off),
           border: InputBorder.none, // Remove o contorno padrão
-          contentPadding: EdgeInsets.symmetric(horizontal: 10), // Padding interno
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 10), // Padding interno
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -107,7 +116,6 @@ class PasswordInput extends StatelessWidget {
     );
   }
 }
-
 
 class LoginButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -145,7 +153,10 @@ class CreateAccountButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: () {},
+      onPressed: () {
+        Navigator.push(
+              context, MaterialPageRoute(builder: (context) => RegisterPage()));
+      },
       child: Text(
         'Crie sua conta aqui!',
         style: TextStyle(color: Colors.orange),
