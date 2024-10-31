@@ -22,7 +22,8 @@ class CadastroScreen extends StatefulWidget {
 }
 
 class _CadastroScreenState extends State<CadastroScreen> {
-  bool _obscureText = true; // Defina como `true` para ocultar a senha por padrão
+  bool _obscureText =
+      true; // Defina como `true` para ocultar a senha por padrão
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +38,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.push(
-              context, MaterialPageRoute(builder: (context) => MyHomePage()));
+                context, MaterialPageRoute(builder: (context) => MyHomePage()));
           },
         ),
       ),
@@ -78,18 +79,6 @@ class _CadastroScreenState extends State<CadastroScreen> {
   }
 }
 
-class _CadastroButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        //TODO: Implementar a lógica de cadastro
-      },
-      child: Text('Cadastrar'),
-    );
-  }
-}
-
 class _InputTextField extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -121,7 +110,8 @@ class _InputTextField extends StatelessWidget {
           prefixIcon: Icon(icon),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility),
                   onPressed: toggleVisibility,
                 )
               : null,
@@ -129,9 +119,28 @@ class _InputTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas
             borderSide: BorderSide.none, // Remove a borda padrão
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 15), // Padding interno
+          contentPadding: EdgeInsets.symmetric(
+              horizontal: 10, vertical: 15), // Padding interno
         ),
       ),
+    );
+  }
+}
+
+class _CadastroButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+        textStyle: TextStyle(fontSize: 20),
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+      ),
+      onPressed: () {
+        //TODO: Implementar a lógica de cadastro
+        
+      },
+      child: Text('Cadastrar', style: TextStyle(color: Colors.white)),
     );
   }
 }
