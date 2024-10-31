@@ -22,20 +22,20 @@ class CadastroScreen extends StatefulWidget {
 }
 
 class _CadastroScreenState extends State<CadastroScreen> {
-  bool _obscureText = true;
+  bool _obscureText = true; // Defina como `true` para ocultar a senha por padrão
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cadastro', 
-            style: TextStyle(
-            color: Colors.white ),),
-        
+        title: Text(
+          'Cadastro',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white,),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Navigator.pop(context);
             Navigator.push(
               context, MaterialPageRoute(builder: (context) => MyHomePage()));
           },
@@ -53,7 +53,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
               SizedBox(height: 20),
               _InputTextField(label: 'email', icon: Icons.email),
               SizedBox(height: 10),
-                            _InputTextField(
+              _InputTextField(
                 label: 'senha',
                 icon: Icons.lock,
                 isPassword: true,
@@ -64,7 +64,6 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   });
                 },
               ),
-              SizedBox(height: 10),
               SizedBox(height: 10),
               _InputTextField(label: 'telefone', icon: Icons.phone),
               SizedBox(height: 10),
@@ -79,10 +78,6 @@ class _CadastroScreenState extends State<CadastroScreen> {
   }
 }
 
-
-
-
-
 class _CadastroButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -94,7 +89,6 @@ class _CadastroButton extends StatelessWidget {
     );
   }
 }
-
 
 class _InputTextField extends StatelessWidget {
   final String label;
@@ -111,9 +105,6 @@ class _InputTextField extends StatelessWidget {
     this.toggleVisibility,
   });
 
- // _InputTextField({required this.label, required this.icon, this.isPassword = false});
-  // bool _obscureText = true; // Controla a visibilidade da senha
-  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -124,14 +115,13 @@ class _InputTextField extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas
       ),
       child: TextFormField(
-        obscureText: isPassword,
+        obscureText: obscureText, // Usa o valor correto para obscureText
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-           suffixIcon: isPassword
+          suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(
-                      obscureText ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility),
                   onPressed: toggleVisibility,
                 )
               : null,
