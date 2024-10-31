@@ -88,23 +88,38 @@ class EmailInput extends StatelessWidget {
   }
 }
 
-class PasswordInput extends StatelessWidget {
+
+class PasswordInput extends StatefulWidget {
+  @override
+  _PasswordInputState createState() => _PasswordInputState();
+}
+
+class _PasswordInputState extends State<PasswordInput> {
+  bool _obscureText = true; // Inicialmente a senha é oculta
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200], // Cor de fundo cinza claro
-        borderRadius:
-            BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8.0),
       ),
       child: TextFormField(
-        obscureText: true,
+        obscureText: _obscureText,
         decoration: InputDecoration(
           labelText: 'Senha',
-          suffixIcon: Icon(Icons.visibility_off),
-          border: InputBorder.none, // Remove o contorno padrão
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 10), // Padding interno
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscureText ? Icons.visibility_off : Icons.visibility,
+            ),
+            onPressed: () {
+              setState(() {
+                _obscureText = !_obscureText; // Alterna a visibilidade
+              });
+            },
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 10),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -116,6 +131,10 @@ class PasswordInput extends StatelessWidget {
     );
   }
 }
+
+
+
+
 
 class LoginButton extends StatelessWidget {
   final VoidCallback onPressed;
