@@ -41,19 +41,27 @@ class _FeedbackregisterState extends State<FeedbackregisterScreen> {
           },
         ),
       ),
-      body: SingleChildScrollView( // O SingleChildScrollView deve envolver o Column
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.perm_identity_outlined,
-                size: 100,
+      body: Center( // O SingleChildScrollView não é mais necessário
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 100), // Adicionando um espaçamento maior para centralizar melhor
+            Icon(
+              Icons.perm_identity_outlined,
+              size: 100,
+            ),
+            SizedBox(height: 20), // Adicionando um espaçamento entre o ícone e o texto
+            Text(
+              'Cadastro realizado com sucesso',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: const Color.fromARGB(255, 255, 102, 14),
               ),
-              SizedBox(height: 20), // Adicionando um espaçamento entre o ícone e o botão
-              _CadastradoButton(), // Adicionando o botão aqui
-            ],
-          ),
+            ),
+            SizedBox(height: 50), // Adicionando um espaçamento maior para o botão
+            _CadastradoButton(), 
+          ],
         ),
       ),
     );
