@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project_todo_list/pages/feedbackRegister-page.dart';
 import '../login-page.dart';
+import '../pages/feedbackRegister-page.dart';
 
 class RegisterPage extends StatelessWidget {
   static String tag = 'register_page';
@@ -138,7 +140,9 @@ class _CadastroButton extends StatelessWidget {
       ),
       onPressed: () {
         //TODO: Implementar a lógica de cadastro
-        
+                Navigator.push(
+              context, MaterialPageRoute(builder: (context) => Feedbackregister()));
+
       },
       child: Text('Cadastrar', style: TextStyle(color: Colors.white)),
     );
