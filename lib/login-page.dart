@@ -1,15 +1,13 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_project_todo_list/pages/updatePassword-page.dart';
 import 'pages/register-page.dart';
 import 'pages/recoveryPassword-page.dart';
 
 class MyHomePage extends StatefulWidget {
-  // MyHomePage({Key? key, required this.title}) : super(key: key);
   static String tag = 'MyHomePage(title: title)';
   const MyHomePage({super.key});
-
-  //final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -23,7 +21,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView( // Permite rolar a tela quando o teclado abre
           padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
@@ -31,19 +29,19 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 LogoWidget(),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 EmailInput(),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 PasswordInput(),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 LoginButton(onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     // TODO: Implementar login
                   }
                 }),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ForgotPasswordButton(),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 CreateAccountButton(),
               ],
             ),
@@ -66,16 +64,14 @@ class EmailInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200], // Fundo cinza claro
-        borderRadius:
-            BorderRadius.circular(8.0), // Bordas arredondadas (opcional)
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8.0),
       ),
       child: TextFormField(
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           labelText: 'Email/Telefone',
-          border: InputBorder.none, // Remove o contorno padrão
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 10), // Padding interno
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 10),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -94,7 +90,7 @@ class PasswordInput extends StatefulWidget {
 }
 
 class _PasswordInputState extends State<PasswordInput> {
-  bool _obscureText = true; // Inicialmente a senha é oculta
+  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
@@ -113,12 +109,12 @@ class _PasswordInputState extends State<PasswordInput> {
             ),
             onPressed: () {
               setState(() {
-                _obscureText = !_obscureText; // Alterna a visibilidade
+                _obscureText = !_obscureText;
               });
             },
           ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -134,18 +130,18 @@ class _PasswordInputState extends State<PasswordInput> {
 class LoginButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  LoginButton({required this.onPressed});
+  const LoginButton({required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-        textStyle: TextStyle(fontSize: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+        textStyle: const TextStyle(fontSize: 20),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
       ),
-      child: Text('Entrar', style: TextStyle(color: Colors.white)),
+      child: const Text('Entrar', style: TextStyle(color: Colors.white)),
     );
   }
 }
@@ -156,9 +152,12 @@ class ForgotPasswordButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Recoverypassword()));
+          context,
+          // context, MaterialPageRoute(builder: (context) => Recoverypassword()));
+          MaterialPageRoute(builder: (context) => UpdatePassword()),
+        );
       },
-      child: Text(
+      child: const Text(
         'Esqueceu a sua senha?',
         style: TextStyle(color: Colors.orange),
       ),
@@ -172,9 +171,11 @@ class CreateAccountButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => RegisterPage()));
+          context,
+          MaterialPageRoute(builder: (context) => RegisterPage()),
+        );
       },
-      child: Text(
+      child: const Text(
         'Crie sua conta aqui!',
         style: TextStyle(color: Colors.orange),
       ),
