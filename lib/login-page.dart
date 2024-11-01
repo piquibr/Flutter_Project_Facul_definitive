@@ -2,12 +2,12 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'pages/register-page.dart';
+import 'pages/recoveryPassword-page.dart';
 
 class MyHomePage extends StatefulWidget {
   // MyHomePage({Key? key, required this.title}) : super(key: key);
   static String tag = 'MyHomePage(title: title)';
   const MyHomePage({super.key});
-
 
   //final String title;
 
@@ -88,7 +88,6 @@ class EmailInput extends StatelessWidget {
   }
 }
 
-
 class PasswordInput extends StatefulWidget {
   @override
   _PasswordInputState createState() => _PasswordInputState();
@@ -132,10 +131,6 @@ class _PasswordInputState extends State<PasswordInput> {
   }
 }
 
-
-
-
-
 class LoginButton extends StatelessWidget {
   final VoidCallback onPressed;
 
@@ -159,7 +154,10 @@ class ForgotPasswordButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: () {},
+      onPressed: () {
+        Navigator.push(
+          context, MaterialPageRoute(builder: (context) => Recoverypassword()));
+      },
       child: Text(
         'Esqueceu a sua senha?',
         style: TextStyle(color: Colors.orange),
@@ -174,7 +172,7 @@ class CreateAccountButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         Navigator.push(
-              context, MaterialPageRoute(builder: (context) => RegisterPage()));
+            context, MaterialPageRoute(builder: (context) => RegisterPage()));
       },
       child: Text(
         'Crie sua conta aqui!',
