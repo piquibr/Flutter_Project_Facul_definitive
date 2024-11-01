@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import './login-page.dart';
 import './pages/register-page.dart';
+import './pages/recoveryPassword-page.dart';
 
 void main() {
   runApp(MyApp());
@@ -10,6 +11,7 @@ class MyApp extends StatelessWidget {
   final routes = <String, WidgetBuilder>{
     MyHomePage.tag: (context) => MyHomePage(),
     RegisterPage.tag: (context) => RegisterPage(),
+    Recoverypassword.tag: (context) => Recoverypassword(),
   };
 
   @override
