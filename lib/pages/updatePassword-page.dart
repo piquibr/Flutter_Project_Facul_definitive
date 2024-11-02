@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../login-page.dart';
+import '../pages/recoveryPassword-page.dart';
 
 class UpdatePassword extends StatelessWidget {
   static String tag = 'update_password_page';
@@ -42,7 +43,8 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Alterar Senha', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Alterar Senha', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -91,7 +93,8 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmarSenhaController,
-                  decoration: const InputDecoration(labelText: 'Confirmar senha'),
+                  decoration:
+                      const InputDecoration(labelText: 'Confirmar senha'),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -103,21 +106,47 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                     return null;
                   },
                 ),
+                ForgotPasswordButton(),
                 const SizedBox(height: 40),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    textStyle: TextStyle(fontSize: 20),
+                    backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+                  ),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Senha alterada com sucesso!')),
+                        const SnackBar(
+                            content: Text('Senha alterada com sucesso!')),
                       );
                     }
                   },
-                  child: const Text('Alterar Senha'),
+                  child: const Text('Alterar Senha',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class ForgotPasswordButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        Navigator.push(
+          context, MaterialPageRoute(builder: (context) => Recoverypassword()),
+          // MaterialPageRoute(builder: (context) => UpdatePassword()),
+        );
+      },
+      child: const Text(
+        'Esqueceu a sua senha?',
+        style: TextStyle(color: Colors.orange),
       ),
     );
   }
