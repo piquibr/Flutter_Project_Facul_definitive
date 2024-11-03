@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
 import 'package:flutter_project_todo_list/pages/updatePassword-page.dart';
 import 'pages/register-page.dart';
 import 'pages/recoveryPassword-page.dart';
@@ -135,7 +136,13 @@ class LoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onPressed,
+      //onPressed: onPressed
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => InicialMain()),
+        );
+      },
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
         textStyle: const TextStyle(fontSize: 20),
