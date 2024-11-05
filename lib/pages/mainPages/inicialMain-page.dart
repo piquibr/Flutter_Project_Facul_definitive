@@ -22,6 +22,7 @@ class Inicialmain extends StatefulWidget {
 }
 
 class _InicialMainState extends State<Inicialmain> {
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,27 +117,52 @@ class NoteItem extends StatelessWidget {
     required this.status,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-        trailing: Column(
-          
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(date),
-            Text(time),
-          ],
-          
-        ),
-        leading: CircleAvatar(
-          child: Text(status.substring(0, 1)),
-        ),
+Widget build(BuildContext context) {
+  return Card(
+    child: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // Alinha conteúdo à esquerda
+        children: [
+          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), // Exibe o título
+          SizedBox(height: 4),
+          Text(description), // Exibe a descrição abaixo do título
+          SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('$date - $time'), // Exibe data e hora
+              Align(
+                alignment: Alignment.bottomRight,
+                child: PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert), // Ícone de menu
+                  onSelected: (value) {
+                    // Lógica para editar ou deletar
+                    if (value == 'edit') {
+                      // Ação de edição
+                    } else if (value == 'delete') {
+                      // Ação de exclusão
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Text('Editar'),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Text('Deletar'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+  
 }
 
