@@ -92,7 +92,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
               ),
             ),
 
-                        SizedBox(height: 8.0),
+            SizedBox(height: 8.0),
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton(
@@ -198,7 +198,38 @@ class _InicialMainPageState extends State<InicialMainPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.note_add),
+                      title: Text('Criar Lembretes'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Lógica para criar lembrete
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.task_alt),
+                      title: Text('Criar Tarefas'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Lógica para criar tarefa
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
         child: Icon(Icons.add),
       ),
     );
