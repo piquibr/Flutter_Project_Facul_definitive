@@ -11,24 +11,46 @@ class InicialMain extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: Inicialmain(),
+      home: InicialMainPage(),
     );
   }
 }
 
-class Inicialmain extends StatefulWidget {
+class InicialMainPage extends StatefulWidget {
   @override
-  _InicialMainState createState() => _InicialMainState();
+  _InicialMainPageState createState() => _InicialMainPageState();
 }
 
-class _InicialMainState extends State<Inicialmain> {
-  
+class _InicialMainPageState extends State<InicialMainPage> {
+  DateTime? startDate;
+  DateTime? endDate;
+  String? selectedType;
+  String? selectedCategory;
+
+  Future<void> _selectDate(BuildContext context, bool isStart) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          startDate = picked;
+        } else {
+          endDate = picked;
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Notas', style: TextStyle(color: Colors.white)),
-        centerTitle: true, // Centraliza o título
+        centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
           icon: Icon(Icons.density_medium_sharp, color: Colors.white),
@@ -52,8 +74,7 @@ class _InicialMainState extends State<Inicialmain> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Color.fromARGB(
-                    10, 255, 101, 14), // Cor de fundo especificada
+                color: Color.fromARGB(10, 255, 101, 14),
                 borderRadius: BorderRadius.circular(25.0),
               ),
               child: TextField(
@@ -62,54 +83,165 @@ class _InicialMainState extends State<Inicialmain> {
                   prefixIcon: Icon(Icons.search),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.0),
-                    borderSide: BorderSide.none, // Remove a borda padrão
+                    borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors
-                      .transparent, // Mantém a cor de fundo definida pelo Container
+                  fillColor: Colors.transparent,
                 ),
+              ),
+            ),
+            
+            SizedBox(height: 8.0),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: Icon(Icons.filter_alt, color: Colors.orange),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Filtrar Notas'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              title: Text(
+                                  'Data Início: ${startDate != null ? startDate!.toLocal().toString().split(' ')[0] : 'Selecionar'}'),
+                              trailing: Icon(Icons.calendar_today),
+                              onTap: () => _selectDate(context, true),
+                            ),
+                            ListTile(
+                              title: Text(
+                                  'Data Fim: ${endDate != null ? endDate!.toLocal().toString().split(' ')[0] : 'Selecionar'}'),
+                              trailing: Icon(Icons.calendar_today),
+                              onTap: () => _selectDate(context, false),
+                            ),
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(labelText: 'Tipo'),
+                              value: selectedType,
+                              items: ['Lembrete', 'Tarefa'].map((String type) {
+                                return DropdownMenuItem<String>(
+                                  value: type,
+                                  child: Text(type),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  selectedType = newValue;
+                                });
+                              },
+                            ),
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(labelText: 'Categoria'),
+                              value: selectedCategory,
+                              items: ['Trabalho', 'Estudo', 'Pessoal'].map((String category) {
+                                return DropdownMenuItem<String>(
+                                  value: category,
+                                  child: Text(category),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  selectedCategory = newValue;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text('Cancelar'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: Text('Aplicar'),
+                            onPressed: () {
+                              // Lógica para aplicar filtros
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
             ),
             SizedBox(height: 16.0),
             Expanded(
-              child: ListView.builder(
-                itemCount: 2,
-                itemBuilder: (context, index) {
-                  return NoteItem(
-                    title: index == 0 ? 'Lembrete' : 'Título tarefa',
-                    description: index == 0
-                        ? 'Supporting line text lorem ipsum dolor sit amet, consectetur.'
-                        : 'Descrição',
+              child: ListView(
+                children: [
+                  LembreteItem(
+                    title: 'Lembrete',
+                    description:
+                        'Supporting line text lorem ipsum dolor sit amet, consectetur.',
                     date: 'dd/mm/aa',
                     time: '00:00',
-                    status: index == 0 ? 'Em andamento' : 'Concluído',
-                  );
-                  
-                },
-
+                    status: 'Em andamento',
+                  ),
+                  TarefaItem(
+                    title: 'Título tarefa',
+                    description: 'Descrição',
+                    date: 'dd/mm/aa',
+                    time: '00:00',
+                    status: 'Concluído',
+                  ),
+                ],
               ),
-              
             ),
-
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.note_add),
+                      title: Text('Criar Lembretes'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Lógica para criar lembrete
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.task_alt),
+                      title: Text('Criar Tarefas'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Lógica para criar tarefa
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
         child: Icon(Icons.add),
       ),
     );
   }
 }
 
-class NoteItem extends StatelessWidget {
+class LembreteItem extends StatelessWidget {
   final String title;
   final String description;
   final String date;
   final String time;
   final String status;
 
-  NoteItem({
+  LembreteItem({
     required this.title,
     required this.description,
     required this.date,
@@ -117,52 +249,122 @@ class NoteItem extends StatelessWidget {
     required this.status,
   });
 
-Widget build(BuildContext context) {
-  return Card(
-    child: Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Alinha conteúdo à esquerda
-        children: [
-          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), // Exibe o título
-          SizedBox(height: 4),
-          Text(description), // Exibe a descrição abaixo do título
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('$date - $time'), // Exibe data e hora
-              Align(
-                alignment: Alignment.bottomRight,
-                child: PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert), // Ícone de menu
-                  onSelected: (value) {
-                    // Lógica para editar ou deletar
-                    if (value == 'edit') {
-                      // Ação de edição
-                    } else if (value == 'delete') {
-                      // Ação de exclusão
-                    }
-                  },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                    const PopupMenuItem<String>(
-                      value: 'edit',
-                      child: Text('Editar'),
+  @override
+  Widget build(BuildContext context) {
+    ValueNotifier<String> selectedStatus = ValueNotifier(status);
+
+    return Card(
+      color: const Color.fromARGB(10, 255, 101, 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+                Text(
+                  '$date - $time',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+            SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(color: Colors.white),
+            ),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    // Ação de edição
+                  } else if (value == 'delete') {
+                    // Ação de exclusão
+                  }
+                },
+                itemBuilder: (BuildContext context) =>
+                    <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'edit',
+                    child: Text('Editar'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('Deletar'),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 8),
+            ValueListenableBuilder<String>(
+              valueListenable: selectedStatus,
+              builder: (context, value, child) {
+                return SegmentedButton<String>(
+                  segments: const <ButtonSegment<String>>[
+                    ButtonSegment<String>(
+                      value: 'Começar',
+                      label: Text('Começar'),
                     ),
-                    const PopupMenuItem<String>(
-                      value: 'delete',
-                      child: Text('Deletar'),
+                    ButtonSegment<String>(
+                      value: 'Andamento',
+                      label: Text('Andamento'),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'Concluído',
+                      label: Text('Concluído'),
                     ),
                   ],
-                ),
-              ),
-            ],
-          ),
-        ],
+                  selected: {value},
+                  onSelectionChanged: (Set<String> newSelection) {
+                    selectedStatus.value = newSelection.first;
+                  },
+                );
+              },
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
-  
+    );
+  }
 }
 
+class TarefaItem extends StatelessWidget {
+  final String title;
+  final String description;
+  final String date;
+  final String time;
+  final String status;
+
+  TarefaItem({
+    required this.title,
+    required this.description,
+    required this.date,
+    required this.time,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LembreteItem(
+      title: title,
+      description: description,
+      date: date,
+      time: time,
+      status: status,
+    );
+  }
+}
