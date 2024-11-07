@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_project_todo_list/login-page.dart';
 
@@ -27,14 +28,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
   String? selectedType;
   String? selectedCategory;
 
-  Future<void> _selectDate(BuildContext context, bool isStart) async {
+    Future<void> _selectDate(BuildContext context, bool isStart) async {
     DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null) {
+    if (picked != null && picked != startDate) {
       setState(() {
         if (isStart) {
           startDate = picked;
@@ -90,8 +91,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 ),
               ),
             ),
-            
-            SizedBox(height: 8.0),
+
+                        SizedBox(height: 8.0),
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton(
@@ -170,14 +171,15 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 },
               ),
             ),
+
+
             SizedBox(height: 16.0),
             Expanded(
               child: ListView(
                 children: [
                   LembreteItem(
                     title: 'Lembrete',
-                    description:
-                        'Supporting line text lorem ipsum dolor sit amet, consectetur.',
+                    description: 'Supporting line text lorem ipsum dolor sit amet, consectetur.',
                     date: 'dd/mm/aa',
                     time: '00:00',
                     status: 'Em andamento',
@@ -196,38 +198,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            builder: (BuildContext context) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      leading: Icon(Icons.note_add),
-                      title: Text('Criar Lembretes'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Lógica para criar lembrete
-                      },
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.task_alt),
-                      title: Text('Criar Tarefas'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Lógica para criar tarefa
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+        onPressed: () {},
         child: Icon(Icons.add),
       ),
     );
@@ -268,10 +239,7 @@ class LembreteItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 Text(
                   '$date - $time',
@@ -284,6 +252,7 @@ class LembreteItem extends StatelessWidget {
               description,
               style: TextStyle(color: Colors.white),
             ),
+
             SizedBox(height: 8),
             Align(
               alignment: Alignment.bottomRight,
@@ -296,8 +265,7 @@ class LembreteItem extends StatelessWidget {
                     // Ação de exclusão
                   }
                 },
-                itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<String>>[
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                   const PopupMenuItem<String>(
                     value: 'edit',
                     child: Text('Editar'),
@@ -308,6 +276,62 @@ class LembreteItem extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Classe TarefaItem é semelhante a LembreteItem
+// Suas propriedades e widgets podem ser mantidos sem alterações
+class TarefaItem extends StatelessWidget {
+  final String title;
+  final String description;
+  final String date;
+  final String time;
+  final String status;
+
+  TarefaItem({
+    required this.title,
+    required this.description,
+    required this.date,
+    required this.time,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    ValueNotifier<String> selectedStatus = ValueNotifier(status);
+
+    return Card(
+      color: const Color.fromARGB(10, 255, 101, 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                Text(
+                  '$date - $time',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+            SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(color: Colors.white),
             ),
             SizedBox(height: 8),
             ValueListenableBuilder<String>(
@@ -335,36 +359,65 @@ class LembreteItem extends StatelessWidget {
                 );
               },
             ),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Selecionar Categoria'),
+                        content: Text('Aqui você pode escolher uma categoria.'),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text('Cancelar'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: Text('Selecionar'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: Text('Categoria'),
+              ),
+            ),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    // Ação de edição
+                  } else if (value == 'delete') {
+                    // Ação de exclusão
+                  }
+                },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'edit',
+                    child: Text('Editar'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('Deletar'),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class TarefaItem extends StatelessWidget {
-  final String title;
-  final String description;
-  final String date;
-  final String time;
-  final String status;
-
-  TarefaItem({
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.time,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LembreteItem(
-      title: title,
-      description: description,
-      date: date,
-      time: time,
-      status: status,
     );
   }
 }
