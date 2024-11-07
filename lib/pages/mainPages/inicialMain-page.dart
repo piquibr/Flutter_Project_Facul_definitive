@@ -94,7 +94,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
             SizedBox(height: 8.0),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.centerRight,
               child: IconButton(
                 icon: Icon(Icons.filter_alt, color: Colors.orange),
                 onPressed: () {
@@ -173,7 +173,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
             ),
 
 
-            SizedBox(height: 16.0),
+            SizedBox(height: 12.0),
             Expanded(
               child: ListView(
                 children: [
@@ -197,6 +197,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
           ],
         ),
       ),
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         onPressed: () {
@@ -232,6 +233,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
         },
         child: Icon(Icons.add),
       ),
+      
     );
   }
 }
@@ -364,6 +366,9 @@ class TarefaItem extends StatelessWidget {
               description,
               style: TextStyle(color: Colors.white),
             ),
+
+
+
             SizedBox(height: 8),
             ValueListenableBuilder<String>(
               valueListenable: selectedStatus,
@@ -392,7 +397,7 @@ class TarefaItem extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Align(
-              alignment: Alignment.bottomRight,
+              alignment: Alignment.bottomLeft,
               child: ElevatedButton(
                 onPressed: () {
                   showDialog(
@@ -422,7 +427,8 @@ class TarefaItem extends StatelessWidget {
                 child: Text('Categoria'),
               ),
             ),
-            SizedBox(height: 8),
+
+            SizedBox(height: 4),
             Align(
               alignment: Alignment.bottomRight,
               child: PopupMenuButton<String>(
@@ -446,6 +452,7 @@ class TarefaItem extends StatelessWidget {
                 ],
               ),
             ),
+
           ],
         ),
       ),
