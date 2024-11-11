@@ -23,6 +23,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
   DateTime _dataLimite = DateTime.now();
   TimeOfDay _horaLimite = TimeOfDay.now();
   bool _concluida = false;
+  final ValueNotifier<String> _selectedStatus = ValueNotifier<String>('Começar');
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +32,11 @@ class _CreatetaskState extends State<CreatetaskScreen> {
         title: Text('Nova Tarefa'),
         backgroundColor: const Color.fromARGB(255, 255, 145, 0),
       ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+      resizeToAvoidBottomInset: true, // Permite que o layout se ajuste ao teclado
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -69,7 +71,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Padding(
-                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   child: TextFormField(
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -82,28 +84,29 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                   ),
                 ),
               ),
+              
               SizedBox(height: 16.0),
               AdicionarCategoriaButton(),
-              
-              
 
               SizedBox(height: 16.0),
-              CheckboxListTile(
-                title: Text('Concluída'),
-                value: _concluida,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _concluida = value!;
-                  });
-                },
-              ),
+              TempoLimiteButton(),
+
+              SizedBox(height: 16.0),
+              StatusSelector(selectedStatus: _selectedStatus),
+              
               SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
-                    // Aqui você pode adicionar a lógica para salvar a tarefa
-                    // Exemplo: enviar os dados para um banco de dados
+                    print('Título: $_titulo');
+                    print('Descrição: $_descricao');
+                    print('Categoria: $_categoria');
+                    print('Status: ${_selectedStatus.value}');
+                    print('Data Limite: $_dataLimite');
+                    print('Hora Limite: $_horaLimite');
+                    print('Concluída: $_concluida');
+                    // Adicione a lógica para salvar a tarefa aqui
                   }
                 },
                 child: Text('Salvar Tarefa'),
@@ -123,7 +126,6 @@ class AdicionarCategoriaButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
-        // Implemente a ação ao clicar no botão
         print('Botão Adicionar Categoria pressionado!');
       },
       child: Row(
@@ -131,6 +133,81 @@ class AdicionarCategoriaButton extends StatelessWidget {
           Icon(Icons.add),
           SizedBox(width: 8),
           Text('Adicionar categoria'),
+        ],
+      ),
+    );
+  }
+}
+
+class StatusSelector extends StatelessWidget {
+  final ValueNotifier<String> selectedStatus;
+
+  const StatusSelector({Key? key, required this.selectedStatus}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        ValueListenableBuilder<String>(
+          valueListenable: selectedStatus,
+          builder: (context, value, child) {
+            return SegmentedButton<String>(
+              segments: const <ButtonSegment<String>>[
+                ButtonSegment<String>(
+                  value: 'Começar',
+                  label: Text('Começar'),
+                ),
+                ButtonSegment<String>(
+                  value: 'Andamento',
+                  label: Text('Andamento'),
+                ),
+                ButtonSegment<String>(
+                  value: 'Concluído',
+                  label: Text('Concluído'),
+                ),
+              ],
+              selected: {value},
+              onSelectionChanged: (Set<String> newSelection) {
+                selectedStatus.value = newSelection.first;
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+
+class TempoLimiteButton extends StatelessWidget {
+  const TempoLimiteButton({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_today),
+              const SizedBox(width: 8.0),
+              Text('dd/mm/aa'),
+            ],
+          ),
+          Row(
+            children: [
+              Icon(Icons.access_time),
+              const SizedBox(width: 8.0),
+              Text('00:00'),
+            ],
+          ),
         ],
       ),
     );
