@@ -123,7 +123,7 @@ class SaveTaskButton extends StatelessWidget {
           backgroundColor: const Color.fromARGB(255, 255, 102, 14), // Cor do botão
         ),
         onPressed: onPressed,
-        child: const Text('Salvar Tarefa',
+        child: const Text('Salvar',
         style: TextStyle(color: Colors.white),
         ),
       ),
