@@ -28,11 +28,13 @@ class _CreatetaskState extends State<CreatetaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Cor de fundo do Scaffold
       appBar: AppBar(
-        title: Text('Nova Tarefa'),
+        title: Text('Nova Tarefa', style: TextStyle(color: Colors.white)), // Título em branco
         backgroundColor: const Color.fromARGB(255, 255, 145, 0),
+        iconTheme: IconThemeData(color: Colors.white), // Ícone de voltar em branco
       ),
-      resizeToAvoidBottomInset: true, // Permite que o layout se ajuste ao teclado
+      resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -44,11 +46,13 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8.0),
+                  color: const Color.fromARGB(40, 0, 0, 0), // Fundo cinza claro
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   child: TextFormField(
                     decoration: InputDecoration(
+                      
                       border: InputBorder.none,
                       hintText: 'Título',
                     ),
@@ -69,6 +73,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8.0),
+                  color: const Color.fromARGB(40, 0, 0, 0), // Fundo cinza claro
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -84,33 +89,19 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                   ),
                 ),
               ),
-              
               SizedBox(height: 16.0),
               AdicionarCategoriaButton(),
-
               SizedBox(height: 16.0),
               TempoLimiteButton(),
-
               SizedBox(height: 16.0),
               StatusSelector(selectedStatus: _selectedStatus),
-              
               SizedBox(height: 16.0),
-              ElevatedButton(
+              SaveTaskButton(
                 onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    print('Título: $_titulo');
-                    print('Descrição: $_descricao');
-                    print('Categoria: $_categoria');
-                    print('Status: ${_selectedStatus.value}');
-                    print('Data Limite: $_dataLimite');
-                    print('Hora Limite: $_horaLimite');
-                    print('Concluída: $_concluida');
-                    // Adicione a lógica para salvar a tarefa aqui
-                  }
+                  // Ação ao pressionar o botão, por exemplo, salvar uma tarefa
                 },
-                child: Text('Salvar Tarefa'),
-              ),
+              )
+
             ],
           ),
         ),
@@ -119,25 +110,56 @@ class _CreatetaskState extends State<CreatetaskScreen> {
   }
 }
 
+class SaveTaskButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const SaveTaskButton({Key? key, required this.onPressed}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 255, 102, 14), // Cor do botão
+        ),
+        onPressed: onPressed,
+        child: const Text('Salvar Tarefa',
+        style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+
+
 class AdicionarCategoriaButton extends StatelessWidget {
   const AdicionarCategoriaButton({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white, // Cor de fundo branca
+      ),
       onPressed: () {
         print('Botão Adicionar Categoria pressionado!');
       },
       child: Row(
+        mainAxisSize: MainAxisSize.min, // Ajusta o tamanho do botão ao conteúdo
         children: [
-          Icon(Icons.add),
-          SizedBox(width: 8),
-          Text('Adicionar categoria'),
+          const Icon(Icons.add, color: Colors.black),
+          const SizedBox(width: 8),
+          const Text(
+            'Adicionar categoria',
+            style: TextStyle(color: Colors.black), // Cor do texto em preto
+          ),
         ],
       ),
     );
   }
 }
+
 
 class StatusSelector extends StatelessWidget {
   final ValueNotifier<String> selectedStatus;
@@ -152,25 +174,37 @@ class StatusSelector extends StatelessWidget {
         ValueListenableBuilder<String>(
           valueListenable: selectedStatus,
           builder: (context, value, child) {
-            return SegmentedButton<String>(
-              segments: const <ButtonSegment<String>>[
-                ButtonSegment<String>(
-                  value: 'Começar',
-                  label: Text('Começar'),
-                ),
-                ButtonSegment<String>(
-                  value: 'Andamento',
-                  label: Text('Andamento'),
-                ),
-                ButtonSegment<String>(
-                  value: 'Concluído',
-                  label: Text('Concluído'),
-                ),
-              ],
-              selected: {value},
-              onSelectionChanged: (Set<String> newSelection) {
-                selectedStatus.value = newSelection.first;
-              },
+            return SizedBox(
+              width: 400, // Largura fixa para manter o tamanho dos botões
+              child: SegmentedButton<String>(
+                segments: const <ButtonSegment<String>>[
+                  ButtonSegment<String>(
+                    value: 'Começar',
+                    label: Text(
+                      'Começar',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                  ButtonSegment<String>(
+                    value: 'Andamento',
+                    label: Text(
+                      'Andamento',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                  ButtonSegment<String>(
+                    value: 'Concluído',
+                    label: Text(
+                      'Concluído',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+                selected: {value},
+                onSelectionChanged: (Set<String> newSelection) {
+                  selectedStatus.value = newSelection.first;
+                },
+              ),
             );
           },
         ),
