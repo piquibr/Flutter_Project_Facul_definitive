@@ -1,6 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_project_todo_list/login-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/config-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/createReminder-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/createTask-page.dart';
 
 class InicialMain extends StatelessWidget {
   static String tag = 'inicialMain_page';
@@ -28,7 +30,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
   String? selectedType;
   String? selectedCategory;
 
-    Future<void> _selectDate(BuildContext context, bool isStart) async {
+  Future<void> _selectDate(BuildContext context, bool isStart) async {
     DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -58,7 +60,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => MyHomePage()),
+              MaterialPageRoute(builder: (context) => ConfigScreen()),
             );
           },
         ),
@@ -91,7 +93,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 ),
               ),
             ),
-
             SizedBox(height: 8.0),
             Align(
               alignment: Alignment.centerRight,
@@ -134,9 +135,11 @@ class _InicialMainPageState extends State<InicialMainPage> {
                               },
                             ),
                             DropdownButtonFormField<String>(
-                              decoration: InputDecoration(labelText: 'Categoria'),
+                              decoration:
+                                  InputDecoration(labelText: 'Categoria'),
                               value: selectedCategory,
-                              items: ['Trabalho', 'Estudo', 'Pessoal'].map((String category) {
+                              items: ['Trabalho', 'Estudo', 'Pessoal']
+                                  .map((String category) {
                                 return DropdownMenuItem<String>(
                                   value: category,
                                   child: Text(category),
@@ -171,15 +174,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 },
               ),
             ),
-
-
             SizedBox(height: 12.0),
             Expanded(
               child: ListView(
                 children: [
                   LembreteItem(
                     title: 'Lembrete',
-                    description: 'Supporting line text lorem ipsum dolor sit amet, consectetur.',
+                    description:
+                        'Supporting line text lorem ipsum dolor sit amet, consectetur.',
                     date: 'dd/mm/aa',
                     time: '00:00',
                     status: 'Em andamento',
@@ -197,7 +199,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
           ],
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         onPressed: () {
@@ -213,15 +214,23 @@ class _InicialMainPageState extends State<InicialMainPage> {
                       leading: Icon(Icons.note_add),
                       title: Text('Criar Lembretes'),
                       onTap: () {
-                        Navigator.pop(context);
-                        // Lógica para criar lembrete
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CreateReminderScreen()),
+                        );
                       },
                     ),
                     ListTile(
                       leading: Icon(Icons.task_alt),
                       title: Text('Criar Tarefas'),
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CreatetaskScreen()),
+                        );
+
                         // Lógica para criar tarefa
                       },
                     ),
@@ -233,7 +242,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
         },
         child: Icon(Icons.add),
       ),
-      
     );
   }
 }
@@ -272,7 +280,10 @@ class LembreteItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
                 Text(
                   '$date - $time',
@@ -285,7 +296,6 @@ class LembreteItem extends StatelessWidget {
               description,
               style: TextStyle(color: Colors.white),
             ),
-
             SizedBox(height: 8),
             Align(
               alignment: Alignment.bottomRight,
@@ -353,7 +363,10 @@ class TarefaItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
                 Text(
                   '$date - $time',
@@ -366,9 +379,6 @@ class TarefaItem extends StatelessWidget {
               description,
               style: TextStyle(color: Colors.white),
             ),
-
-
-
             SizedBox(height: 8),
             ValueListenableBuilder<String>(
               valueListenable: selectedStatus,
@@ -427,7 +437,6 @@ class TarefaItem extends StatelessWidget {
                 child: Text('Categoria'),
               ),
             ),
-
             SizedBox(height: 4),
             Align(
               alignment: Alignment.bottomRight,
@@ -452,7 +461,6 @@ class TarefaItem extends StatelessWidget {
                 ],
               ),
             ),
-
           ],
         ),
       ),
