@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project_todo_list/login-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/help-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
+import 'package:flutter_project_todo_list/pages/recoveryPassword-page.dart';
+import 'package:flutter_project_todo_list/pages/updatePassword-page.dart';
 
 class Config extends StatelessWidget {
   @override
@@ -38,8 +43,14 @@ class _ConfigScreenState extends State<ConfigScreen> {
           ListTile(
             leading: Icon(Icons.lock),
             title: Text('Alterar senha'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UpdatePasswordScreen()),
+              );
+            },
           ),
-          Divider(), // Barra de divisão entre os itens
+          Divider(),
           ListTile(
             leading: Icon(Icons.notifications),
             title: Text('Notificações'),
@@ -52,15 +63,27 @@ class _ConfigScreenState extends State<ConfigScreen> {
               activeColor: Colors.white,
             ),
           ),
-          Divider(), // Barra de divisão entre os itens
+          Divider(),
           ListTile(
             leading: Icon(Icons.help),
             title: Text('Ajuda'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HelpPage(title: 'Ajuda')),
+              );
+            },
           ),
-          Divider(), // Barra de divisão entre os itens
+          Divider(),
           ListTile(
             leading: Icon(Icons.exit_to_app),
             title: Text('Sair'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyHomePage()),
+              );
+            },
           ),
         ],
       ),
