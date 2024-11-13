@@ -31,7 +31,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
       backgroundColor: Colors.white, // Cor de fundo do Scaffold
       appBar: AppBar(
         title: Text('Nova Tarefa', style: TextStyle(color: Colors.white)), // Título em branco
-        backgroundColor: const Color.fromARGB(255, 255, 145, 0),
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         iconTheme: IconThemeData(color: Colors.white), // Ícone de voltar em branco
       ),
       resizeToAvoidBottomInset: true,

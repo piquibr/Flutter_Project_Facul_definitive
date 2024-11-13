@@ -26,7 +26,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.orange,
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
@@ -38,6 +38,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
           style: TextStyle(color: Colors.white),
         ),
       ),
+
       body: ListView(
         children: [
           ListTile(
@@ -59,7 +60,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
               onChanged: (value) {
                 // Implemente a lógica para alternar notificações
               },
-              activeTrackColor: Colors.orange,
+              activeTrackColor: const Color.fromARGB(255, 255, 102, 14),
               activeColor: Colors.white,
             ),
           ),
@@ -98,14 +99,14 @@ class _ConfigScreenState extends State<ConfigScreen> {
               onChanged: (value) {
                 // Implemente a lógica para alternar o modo claro/escuro
               },
-              activeTrackColor: Colors.orange,
+              activeTrackColor: const Color.fromARGB(255, 255, 102, 14),
               activeColor: Colors.white,
             ),
             SizedBox(width: 8.0),
             Text(
               'Modo Claro',
               style: TextStyle(
-                color: Colors.orange,
+                color: const Color.fromARGB(255, 255, 102, 14),
                 fontSize: 16.0,
                 fontWeight: FontWeight.bold,
               ),

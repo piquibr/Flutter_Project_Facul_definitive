@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project_todo_list/login-page.dart';
+// import 'package:flutter_project_todo_list/login-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/config-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createReminder-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createTask-page.dart';
@@ -266,7 +266,7 @@ class LembreteItem extends StatelessWidget {
     ValueNotifier<String> selectedStatus = ValueNotifier(status);
 
     return Card(
-      color: const Color.fromARGB(10, 255, 101, 14),
+      color: const Color.fromARGB(230, 255, 235, 224), 
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -283,24 +283,24 @@ class LembreteItem extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                      color: Colors.black),
                 ),
                 Text(
                   '$date - $time',
-                  style: TextStyle(color: Colors.white70),
+                  style: TextStyle(color: Colors.black),
                 ),
               ],
             ),
             SizedBox(height: 4),
             Text(
               description,
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
             SizedBox(height: 8),
             Align(
               alignment: Alignment.bottomRight,
               child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.white),
+                icon: Icon(Icons.more_vert, color: Colors.black),
                 onSelected: (value) {
                   if (value == 'edit') {
                     // Ação de edição
@@ -349,7 +349,7 @@ class TarefaItem extends StatelessWidget {
     ValueNotifier<String> selectedStatus = ValueNotifier(status);
 
     return Card(
-      color: const Color.fromARGB(10, 255, 101, 14),
+      color: const Color.fromARGB(255, 255, 217, 196),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -366,18 +366,18 @@ class TarefaItem extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                      color: Colors.black),
                 ),
                 Text(
                   '$date - $time',
-                  style: TextStyle(color: Colors.white70),
+                  style: TextStyle(color: Colors.black),
                 ),
               ],
             ),
             SizedBox(height: 4),
             Text(
               description,
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
             SizedBox(height: 8),
             ValueListenableBuilder<String>(
@@ -434,14 +434,14 @@ class TarefaItem extends StatelessWidget {
                     },
                   );
                 },
-                child: Text('Categoria'),
+                child: Text('Categoria', style: TextStyle(color: Colors.black),),
               ),
             ),
             SizedBox(height: 4),
             Align(
               alignment: Alignment.bottomRight,
               child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.white),
+                icon: Icon(Icons.more_vert, color: Colors.black),
                 onSelected: (value) {
                   if (value == 'edit') {
                     // Ação de edição
