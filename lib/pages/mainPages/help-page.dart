@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
 
 class MyApp extends StatelessWidget {
   @override
@@ -26,15 +27,22 @@ class _HelpPageState extends State<HelpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Implement your back button logic here
+            Navigator.pop(context);
           },
         ),
-        title: Text(widget.title),
+        title: Text(
+          'Ajuda',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
+
+
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,12 +74,28 @@ class _HelpPageState extends State<HelpPage> {
                     ),
                   ),
                   SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
+                  
+                  
+
+                  Center(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        textStyle: TextStyle(fontSize: 20),
+                        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+                      ),
+                      onPressed: () {
                         // Implement your suggestion submission logic here
                       },
-                    child: Text('Enviar Sugestão'),
-                  ),
+                      child: Text(
+                        'Enviar',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  )
+
+                 
+
                 ],
               ),
             ),
