@@ -1,46 +1,51 @@
-// app.js
+// Importações necessárias
 const express = require("express");
 const admin = require("firebase-admin");
 
-// Inicialize o app Firebase com a chave privada do projeto
+const app = express();
+
+// Inicialize o Firebase Admin com a chave privada
 const serviceAccount = require("./google-services.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://ToDoList.firebaseio.com"
 });
 
+// Obtenha a referência do Firestore
 const db = admin.firestore();
-const app = express();
-const PORT = 3000;
 
+// Middleware para lidar com JSON
 app.use(express.json());
 
-// Rota para adicionar um documento ao Firestore
-app.post("/api/addData", async (req, res) => {
-    const { collection, data } = req.body;
+// Rota para adicionar um teste ao Firestore
+app.post("/api/addTest", async (req, res) => {
+    const { testKey, testValue } = req.body;
+
     try {
-        const docRef = await db.collection(collection).add(data);
-        res.status(200).json({ id: docRef.id });
+        // Salva o dado no Firestore na coleção "tests"
+        const docRef = await db.collection("tests").add({
+            testKey,
+            testValue,
+            createdAt: new Date(),
+        });
+
+        res.status(201).json({
+            message: "Documento adicionado com sucesso",
+            id: docRef.id,
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Erro ao adicionar documento:", error.message);
+        res.status(500).json({ error: "Erro ao salvar o documento no Firestore" });
     }
 });
 
-// Rota para recuperar um documento do Firestore
-app.get("/api/getData/:collection/:id", async (req, res) => {
-    const { collection, id } = req.params;
-    try {
-        const doc = await db.collection(collection).doc(id).get();
-        if (!doc.exists) {
-            return res.status(404).json({ message: "Documento não encontrado" });
-        }
-        res.status(200).json(doc.data());
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+// Rota de teste
+app.get("/", (req, res) => {
+    res.send("Bem-vindo ao backend com Node.js e Express!");
 });
 
+// Porta do servidor
+const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor Express rodando em http://localhost:${PORT}`);
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
