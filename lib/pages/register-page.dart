@@ -3,6 +3,41 @@ import 'package:flutter_project_todo_list/pages/feedbackRegister-page.dart';
 import '../login-page.dart';
 import '../pages/feedbackRegister-page.dart';
 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> _cadastrarUsuario(
+    String email, String senha, String telefone, String nome) async {
+  // const String apiUrl = "http://localhost:3000/api/addTest"; // Substitua pelo URL da sua API.
+  const String apiUrl = "http://192.168.0.141:8080/api/addTest";
+
+  try {
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "email": email,
+        "senha": senha,
+        "telefone": telefone,
+        "nome": nome,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print("Cadastro realizado com sucesso!");
+      print(response.body);
+    } else {
+      print("Erro no cadastro: ${response.statusCode}");
+      print("Email: " + email);
+      print(response.body);
+    }
+  } catch (error) {
+    print("Erro ao conectar à API: $error");
+  }
+}
+
 class RegisterPage extends StatelessWidget {
   static String tag = 'register_page';
 
@@ -24,6 +59,11 @@ class CadastroScreen extends StatefulWidget {
 }
 
 class _CadastroScreenState extends State<CadastroScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _senhaController = TextEditingController();
+  final TextEditingController _telefoneController = TextEditingController();
+  final TextEditingController _nomeController = TextEditingController();
+  
   bool _obscureText =
       true; // Defina como `true` para ocultar a senha por padrão
 
@@ -54,7 +94,17 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 size: 100,
               ),
               SizedBox(height: 20),
-              _InputTextField(label: 'email', icon: Icons.email),
+
+              // _InputTextField(label: 'email', icon: Icons.email),
+              _InputTextField(
+                label: 'email',
+                icon: Icons.email,
+                isPassword: false,
+                obscureText: false,
+                toggleVisibility: null,
+                controller: _emailController, // Adicionado
+              ),
+
               SizedBox(height: 10),
               _InputTextField(
                 label: 'senha',
@@ -63,16 +113,46 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 obscureText: _obscureText,
                 toggleVisibility: () {
                   setState(() {
-                    _obscureText = !_obscureText; // Alterna a visibilidade
+                    _obscureText = !_obscureText;
                   });
                 },
+                controller: _senhaController, // Adicionado
               ),
               SizedBox(height: 10),
-              _InputTextField(label: 'telefone', icon: Icons.phone),
+
+              // _InputTextField(label: 'telefone', icon: Icons.phone),
+              _InputTextField(
+                label: 'telefone',
+                icon: Icons.phone,
+                isPassword: false,
+                obscureText: false,
+                toggleVisibility: null,
+                controller: _telefoneController, // Adicionado
+              ),
               SizedBox(height: 10),
-              _InputTextField(label: 'nome', icon: Icons.person),
+
+              //_InputTextField(label: 'nome', icon: Icons.person),
+              _InputTextField(
+                label: 'nome',
+                icon: Icons.person,
+                isPassword: false,
+                obscureText: false,
+                toggleVisibility: null,
+                controller: _nomeController, // Adicionado
+              ),
+
               SizedBox(height: 20),
-              _CadastroButton(),
+
+              _CadastroButton(
+                onPressed: () {
+                  _cadastrarUsuario(
+                    _emailController.text,
+                    _senhaController.text,
+                    _telefoneController.text,
+                    _nomeController.text,
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -88,6 +168,18 @@ class _InputTextField extends StatelessWidget {
   final bool obscureText;
   final VoidCallback? toggleVisibility;
 
+  final TextEditingController? controller;
+
+  _InputTextField({
+    required this.label,
+    required this.icon,
+    this.isPassword = false,
+    this.obscureText = false,
+    this.toggleVisibility,
+    this.controller,
+  });
+
+  /** 
   _InputTextField({
     required this.label,
     required this.icon,
@@ -95,6 +187,8 @@ class _InputTextField extends StatelessWidget {
     this.obscureText = false,
     this.toggleVisibility,
   });
+
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +224,34 @@ class _InputTextField extends StatelessWidget {
 }
 
 class _CadastroButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  _CadastroButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+        textStyle: TextStyle(fontSize: 20),
+        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+      ),
+      onPressed: onPressed, // Use a função passada
+      child: Text('Cadastrar', style: TextStyle(color: Colors.white)),
+    );
+  }
+}
+
+
+
+
+/** 
+
+class _CadastroButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  _CadastroButton({required this.onPressed});
+  
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
@@ -148,3 +270,5 @@ class _CadastroButton extends StatelessWidget {
     );
   }
 }
+
+**/
