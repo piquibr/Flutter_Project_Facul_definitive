@@ -218,6 +218,7 @@ class _InputTextField extends StatelessWidget {
           contentPadding: EdgeInsets.symmetric(
               horizontal: 10, vertical: 15), // Padding interno
         ),
+        controller: controller
       ),
     );
   }
