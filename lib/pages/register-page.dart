@@ -9,7 +9,7 @@ import 'dart:convert';
 Future<void> _cadastrarUsuario(
     String email, String senha, String telefone, String nome) async {
   // const String apiUrl = "http://localhost:3000/api/addTest"; // Substitua pelo URL da sua API.
-  const String apiUrl = "http://192.168.0.141:8080/api/addTest";
+  const String apiUrl = "http://localhost:8080/api/addTest";
 
   try {
     final response = await http.post(
@@ -63,7 +63,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final TextEditingController _senhaController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
-  
+
   bool _obscureText =
       true; // Defina como `true` para ocultar a senha por padrão
 
@@ -200,26 +200,25 @@ class _InputTextField extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas
       ),
       child: TextFormField(
-        obscureText: obscureText, // Usa o valor correto para obscureText
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          suffixIcon: isPassword
-              ? IconButton(
-                  icon: Icon(
-                      obscureText ? Icons.visibility_off : Icons.visibility),
-                  onPressed: toggleVisibility,
-                )
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas
-            borderSide: BorderSide.none, // Remove a borda padrão
+          obscureText: obscureText, // Usa o valor correto para obscureText
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(icon),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                        obscureText ? Icons.visibility_off : Icons.visibility),
+                    onPressed: toggleVisibility,
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0), // Bordas arredondadas
+              borderSide: BorderSide.none, // Remove a borda padrão
+            ),
+            contentPadding: EdgeInsets.symmetric(
+                horizontal: 10, vertical: 15), // Padding interno
           ),
-          contentPadding: EdgeInsets.symmetric(
-              horizontal: 10, vertical: 15), // Padding interno
-        ),
-        controller: controller
-      ),
+          controller: controller),
     );
   }
 }

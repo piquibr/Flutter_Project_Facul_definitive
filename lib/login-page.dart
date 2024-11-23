@@ -1,5 +1,6 @@
 import 'dart:developer';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
 import 'package:flutter_project_todo_list/pages/updatePassword-page.dart';
@@ -17,12 +18,23 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final _formKey = GlobalKey<FormState>();
 
+  // Controladores de texto
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: SingleChildScrollView( // Permite rolar a tela quando o teclado abre
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
@@ -31,15 +43,15 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 LogoWidget(),
                 const SizedBox(height: 20),
-                EmailInput(),
+                EmailInput(controller: _emailController),
                 const SizedBox(height: 10),
-                PasswordInput(),
+                PasswordInput(controller: _passwordController),
                 const SizedBox(height: 20),
-                LoginButton(onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // TODO: Implementar login
-                  }
-                }),
+                LoginButton(
+                  emailController: _emailController,
+                  passwordController: _passwordController,
+                  formKey: _formKey,
+                ),
                 const SizedBox(height: 20),
                 ForgotPasswordButton(),
                 const SizedBox(height: 10),
@@ -61,6 +73,10 @@ class LogoWidget extends StatelessWidget {
 }
 
 class EmailInput extends StatelessWidget {
+  final TextEditingController controller;
+
+  const EmailInput({required this.controller});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -69,6 +85,7 @@ class EmailInput extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: TextFormField(
+        controller: controller,
         decoration: const InputDecoration(
           labelText: 'Email/Telefone',
           border: InputBorder.none,
@@ -85,13 +102,10 @@ class EmailInput extends StatelessWidget {
   }
 }
 
-class PasswordInput extends StatefulWidget {
-  @override
-  _PasswordInputState createState() => _PasswordInputState();
-}
+class PasswordInput extends StatelessWidget {
+  final TextEditingController controller;
 
-class _PasswordInputState extends State<PasswordInput> {
-  bool _obscureText = true;
+  const PasswordInput({required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -101,21 +115,12 @@ class _PasswordInputState extends State<PasswordInput> {
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: TextFormField(
-        obscureText: _obscureText,
-        decoration: InputDecoration(
+        controller: controller,
+        obscureText: true,
+        decoration: const InputDecoration(
           labelText: 'Senha',
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscureText ? Icons.visibility_off : Icons.visibility,
-            ),
-            onPressed: () {
-              setState(() {
-                _obscureText = !_obscureText;
-              });
-            },
-          ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -129,20 +134,59 @@ class _PasswordInputState extends State<PasswordInput> {
 }
 
 class LoginButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final GlobalKey<FormState> formKey;
 
-  const LoginButton({required this.onPressed});
+  const LoginButton({
+    required this.emailController,
+    required this.passwordController,
+    required this.formKey,
+  });
 
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      //onPressed: onPressed
-      onPressed: () {
+  Future<void> _login(BuildContext context) async {
+    if (!formKey.currentState!.validate()) return;
+
+    final email = emailController.text.trim();
+    final senha = passwordController.text.trim();
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/login'), // Substitua pela URL da API
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'senha': senha}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final token = data['token']; // Supondo que a API retorna um token
+
+        // Exemplo: Armazenar token usando shared_preferences
+        // final prefs = await SharedPreferences.getInstance();
+        // await prefs.setString('token', token);
+
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => InicialMain()),
         );
-      },
+      } else {
+        final error = jsonDecode(response.body)['error'];
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $error')),
+        );
+      }
+    } catch (e) {
+      log("Erro durante o login: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao se conectar à API')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => _login(context),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
         textStyle: const TextStyle(fontSize: 20),
@@ -160,7 +204,6 @@ class ForgotPasswordButton extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          // context, MaterialPageRoute(builder: (context) => Recoverypassword()));
           MaterialPageRoute(builder: (context) => UpdatePassword()),
         );
       },
