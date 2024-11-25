@@ -3,6 +3,9 @@ const express = require("express");
 const admin = require("firebase-admin");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+const moment = require("moment"); // Adicionando moment.js para formatação de datas
 
 // Inicialize o Firebase Admin com a chave privada
 const serviceAccount = require("./google-services.json");
@@ -18,7 +21,7 @@ app.use(cors()); // Permite requisições de origens diferentes (CORS)
 app.use(express.json()); // Middleware para lidar com JSON
 
 // Rota para adicionar um usuário ao Firestore
-app.post("/api/addTest", async (req, res) => {
+app.post("/api/addUser", async (req, res) => {
   const { email, senha, telefone, nome } = req.body;
 
   if (!email || !senha || !telefone || !nome) {
@@ -47,56 +50,120 @@ app.post("/api/addTest", async (req, res) => {
   }
 });
 
-
-//Atualizar senhas Firestore
-
-const atualizarSenhas = async () => {
-  const usuarios = await db.collection("usuarios").get();
-
-  usuarios.forEach(async (doc) => {
-    const usuario = doc.data();
-
-    if (usuario.senha && !usuario.senha.startsWith("$2b$")) {
-      // Hashear a senha se ela ainda não estiver hasheada
-      const senhaHash = await bcrypt.hash(usuario.senha, 10);
-
-      // Atualizar a senha no Firestore
-      await db.collection("usuarios").doc(doc.id).update({ senha: senhaHash });
-      console.log(`Senha do usuário ${doc.id} atualizada para hash.`);
-    }
-  });
-};
-
-atualizarSenhas();
-
-// Rota para adicionar um teste simples ao Firestore
-app.post("/api/tist", async (req, res) => {
+// Rota para adicionar uma tarefa ao Firestore
+app.post("/api/tarefas", async (req, res) => {
   try {
-    const docRef = await db.collection("users").add({
-      first: "Ada",
-      last: "Lovelace",
-      born: 1815,
-    });
+    const { userId, titulo, descricao, horario } = req.body;
 
-    console.log("Documento criado com ID:", docRef.id);
-    res.status(201).send({
-      message: "Documento adicionado com sucesso!",
-      id: docRef.id,
-    });
+    if (!userId || !titulo || !descricao || !horario ) {
+      return res.status(400).json({ error: "Todos os campos são obrigatórios!" });
+    }
+
+    const formattedHorario = moment(horario, "DD/MM/YYYY HH:mm").toDate(); // Converte para o formato correto
+
+    const tarefasRef = db.collection("tarefas");
+    const novaTarefa = {
+      userId,
+      titulo,
+      descricao,
+      horario: formattedHorario,
+    };
+
+    const docRef = await tarefasRef.add(novaTarefa);
+    res.status(201).json({ message: "Tarefa adicionada!", id: docRef.id });
   } catch (error) {
-    console.error("Erro ao adicionar documento:", error);
-    res.status(500).send({ error: "Erro ao adicionar documento." });
+    console.error("Erro ao adicionar tarefa:", error);
+    res.status(500).json({ error: "Erro ao adicionar tarefa." });
   }
 });
 
-// Rota de teste
-app.get("/", (req, res) => {
-  res.send("Bem-vindo ao backend com Node.js e Express!");
+// Rota para listar as tarefas de um usuário
+app.get("/api/tarefas/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ error: "O ID do usuário é obrigatório!" });
+    }
+
+    const tarefasSnapshot = await db.collection("tarefas").where("userId", "==", userId).get();
+
+    if (tarefasSnapshot.empty) {
+      return res.status(404).json({ message: "Nenhuma tarefa encontrada para este usuário." });
+    }
+
+    const tarefas = tarefasSnapshot.docs.map((doc) => {
+      const tarefaData = doc.data();
+      return {
+        id: doc.id,
+        ...tarefaData,
+        horario: moment(tarefaData.horario.toDate()).format("DD/MM/YYYY HH:mm"), // Formata a data
+      };
+    });
+
+    res.status(200).json(tarefas);
+  } catch (error) {
+    console.error("Erro ao buscar tarefas:", error);
+    res.status(500).json({ error: "Erro ao buscar tarefas." });
+  }
+});
+
+// Rota para excluir uma tarefa
+app.delete("/api/tarefas/:id", async (req, res) => {
+  try {
+    const { id } = req.params; // ID da tarefa a ser excluída
+
+    // Referência à tarefa no Firestore
+    const tarefaRef = db.collection("tarefas").doc(id);
+    const tarefa = await tarefaRef.get();
+
+    if (!tarefa.exists) {
+      return res.status(404).json({ error: "Tarefa não encontrada!" });
+    }
+
+    await tarefaRef.delete();
+    res.status(200).json({ message: "Tarefa excluída com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao excluir tarefa:", error);
+    res.status(500).json({ error: "Erro ao excluir tarefa." });
+  }
+});
+
+// Rota para editar uma tarefa
+app.put("/api/tarefas/:id", async (req, res) => {
+  try {
+    const { id } = req.params; // ID da tarefa a ser atualizada
+    const { titulo, descricao, horario } = req.body;
+
+    // Verifica se os campos necessários foram fornecidos
+    if (!titulo && !descricao && !horario ) {
+      return res.status(400).json({ error: "Nenhum campo para atualizar foi fornecido!" });
+    }
+
+    const atualizacoes = {};
+    if (titulo) atualizacoes.titulo = titulo;
+    if (descricao) atualizacoes.descricao = descricao;
+    if (horario) atualizacoes.horario = new Date(horario); // Formato de data
+
+    // Atualiza a tarefa no Firestore
+    const tarefaRef = db.collection("tarefas").doc(id);
+    const tarefa = await tarefaRef.get();
+
+    if (!tarefa.exists) {
+      return res.status(404).json({ error: "Tarefa não encontrada!" });
+    }
+
+    await tarefaRef.update(atualizacoes);
+    res.status(200).json({ message: "Tarefa atualizada com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao atualizar tarefa:", error);
+    res.status(500).json({ error: "Erro ao atualizar tarefa." });
+  }
 });
 
 
-// Rota Autenticar-Login
 
+// Rota de autenticação (login)
 app.post("/login", async (req, res) => {
   const { email, senha } = req.body;
 
@@ -109,30 +176,19 @@ app.post("/login", async (req, res) => {
     const usuarios = await db.collection("usuarios").where("email", "==", emailNormalizado).get();
 
     if (usuarios.empty) {
-      console.log("Nenhum usuário encontrado com este e-mail:", emailNormalizado);
       return res.status(401).send({ error: "E-mail ou senha inválidos!" });
     }
 
     const usuarioDoc = usuarios.docs[0];
     const usuario = usuarioDoc.data();
-    console.log("Usuário encontrado:", usuario);
-
-    if (!usuario.senha) {
-      console.error("Senha ausente no banco de dados.");
-      return res.status(500).send({ error: "Erro no servidor." });
-    }
-
-    console.log("Senha fornecida:", senha);
-    console.log("Senha armazenada:", usuario.senha);
 
     const senhaValida = await bcrypt.compare(senha, usuario.senha);
 
     if (!senhaValida) {
-      console.log("Senha inválida para o e-mail:", emailNormalizado);
       return res.status(401).send({ error: "E-mail ou senha inválidos!" });
     }
 
-    const jwt = require("jsonwebtoken");
+    // Gera um token JWT
     const token = jwt.sign({ id: usuarioDoc.id }, "sua_chave_secreta", { expiresIn: "1h" });
 
     res.status(200).send({
@@ -148,6 +204,14 @@ app.post("/login", async (req, res) => {
     console.error("Erro ao autenticar:", error);
     res.status(500).send({ error: "Erro ao autenticar." });
   }
+});
+
+// Middleware para interpretar JSON no corpo da requisição
+app.use(bodyParser.json());
+
+// Rota de teste
+app.get("/", (req, res) => {
+  res.send("Bem-vindo ao backend com Node.js e Express!");
 });
 
 // Porta do servidor

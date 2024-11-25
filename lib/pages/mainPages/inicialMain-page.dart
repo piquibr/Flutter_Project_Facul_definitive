@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_project_todo_list/login-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/config-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createReminder-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createTask-page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class InicialMain extends StatelessWidget {
   static String tag = 'inicialMain_page';
@@ -29,6 +30,60 @@ class _InicialMainPageState extends State<InicialMainPage> {
   DateTime? endDate;
   String? selectedType;
   String? selectedCategory;
+  String? searchText;
+  List tasks = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTasks();
+  }
+
+  Future<void> fetchTasks() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final userId = 'BWOXEy1N5nnn886D8ziv';
+      final response = await http
+          .get(Uri.parse('http://localhost:8080/api/tarefas/$userId'));
+      if (response.statusCode == 200) {
+        setState(() {
+          tasks = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          tasks = json.decode(response.body);
+        });
+        throw Exception('Failed to load tasks');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error fetching tasks: \$e');
+    }
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    try {
+      final response = await http
+          .delete(Uri.parse('http://localhost:8080/api/tarefas/$taskId'));
+      if (response.statusCode == 200) {
+        setState(() {
+          tasks.removeWhere((task) => task['id'] == taskId);
+        });
+      } else {
+        throw Exception('Failed to delete task');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
 
   Future<void> _selectDate(BuildContext context, bool isStart) async {
     DateTime? picked = await showDatePicker(
@@ -37,7 +92,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != startDate) {
+    if (picked != null) {
       setState(() {
         if (isStart) {
           startDate = picked;
@@ -46,6 +101,31 @@ class _InicialMainPageState extends State<InicialMainPage> {
         }
       });
     }
+  }
+
+  void applyFilters() {
+    // Filtrar tarefas aqui
+    List filteredTasks = tasks.where((task) {
+      final matchesStartDate = startDate == null ||
+          DateTime.parse(task['horario']).isAfter(startDate!);
+      final matchesEndDate =
+          endDate == null || DateTime.parse(task['horario']).isBefore(endDate!);
+      final matchesType = selectedType == null || task['tipo'] == selectedType;
+      final matchesCategory =
+          selectedCategory == null || task['categoria'] == selectedCategory;
+      final matchesSearchText = searchText == null ||
+          task['titulo'].toLowerCase().contains(searchText!.toLowerCase());
+
+      return matchesStartDate &&
+          matchesEndDate &&
+          matchesType &&
+          matchesCategory &&
+          matchesSearchText;
+    }).toList();
+
+    setState(() {
+      tasks = List.from(filteredTasks);
+    });
   }
 
   @override
@@ -81,6 +161,11 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 borderRadius: BorderRadius.circular(25.0),
               ),
               child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchText = value;
+                  });
+                },
                 decoration: InputDecoration(
                   hintText: 'Pesquisar...',
                   prefixIcon: Icon(Icons.search),
@@ -163,7 +248,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
                           TextButton(
                             child: Text('Aplicar'),
                             onPressed: () {
-                              // Lógica para aplicar filtros
+                              applyFilters();
                               Navigator.of(context).pop();
                             },
                           ),
@@ -176,25 +261,76 @@ class _InicialMainPageState extends State<InicialMainPage> {
             ),
             SizedBox(height: 12.0),
             Expanded(
-              child: ListView(
-                children: [
-                  LembreteItem(
-                    title: 'Lembrete',
-                    description:
-                        'Supporting line text lorem ipsum dolor sit amet, consectetur.',
-                    date: 'dd/mm/aa',
-                    time: '00:00',
-                    status: 'Em andamento',
-                  ),
-                  TarefaItem(
-                    title: 'Título tarefa',
-                    description: 'Descrição',
-                    date: 'dd/mm/aa',
-                    time: '00:00',
-                    status: 'Concluído',
-                  ),
-                ],
-              ),
+              child: isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = tasks[index];
+                        return Card(
+                          color: const Color.fromARGB(230, 255, 235, 224),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      task['titulo'],
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black),
+                                    ),
+                                    Text(
+                                      '${task['horario']}',
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  task['descricao'],
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                                SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert,
+                                        color: Colors.black),
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        // Ação de edição
+                                      } else if (value == 'delete') {
+                                        deleteTask(task['id']);
+                                      }
+                                    },
+                                    itemBuilder: (BuildContext context) =>
+                                        <PopupMenuEntry<String>>[
+                                      const PopupMenuItem<String>(
+                                        value: 'edit',
+                                        child: Text('Editar'),
+                                      ),
+                                      const PopupMenuItem<String>(
+                                        value: 'delete',
+                                        child: Text('Deletar'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -230,8 +366,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
                           MaterialPageRoute(
                               builder: (context) => CreatetaskScreen()),
                         );
-
-                        // Lógica para criar tarefa
                       },
                     ),
                   ],
@@ -241,228 +375,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
           );
         },
         child: Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class LembreteItem extends StatelessWidget {
-  final String title;
-  final String description;
-  final String date;
-  final String time;
-  final String status;
-
-  LembreteItem({
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.time,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    ValueNotifier<String> selectedStatus = ValueNotifier(status);
-
-    return Card(
-      color: const Color.fromARGB(230, 255, 235, 224), 
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                ),
-                Text(
-                  '$date - $time',
-                  style: TextStyle(color: Colors.black),
-                ),
-              ],
-            ),
-            SizedBox(height: 4),
-            Text(
-              description,
-              style: TextStyle(color: Colors.black),
-            ),
-            SizedBox(height: 8),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.black),
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    // Ação de edição
-                  } else if (value == 'delete') {
-                    // Ação de exclusão
-                  }
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'edit',
-                    child: Text('Editar'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Text('Deletar'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Classe TarefaItem é semelhante a LembreteItem
-// Suas propriedades e widgets podem ser mantidos sem alterações
-class TarefaItem extends StatelessWidget {
-  final String title;
-  final String description;
-  final String date;
-  final String time;
-  final String status;
-
-  TarefaItem({
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.time,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    ValueNotifier<String> selectedStatus = ValueNotifier(status);
-
-    return Card(
-      color: const Color.fromARGB(255, 255, 217, 196),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                ),
-                Text(
-                  '$date - $time',
-                  style: TextStyle(color: Colors.black),
-                ),
-              ],
-            ),
-            SizedBox(height: 4),
-            Text(
-              description,
-              style: TextStyle(color: Colors.black),
-            ),
-            SizedBox(height: 8),
-            ValueListenableBuilder<String>(
-              valueListenable: selectedStatus,
-              builder: (context, value, child) {
-                return SegmentedButton<String>(
-                  segments: const <ButtonSegment<String>>[
-                    ButtonSegment<String>(
-                      value: 'Começar',
-                      label: Text('Começar'),
-                    ),
-                    ButtonSegment<String>(
-                      value: 'Andamento',
-                      label: Text('Andamento'),
-                    ),
-                    ButtonSegment<String>(
-                      value: 'Concluído',
-                      label: Text('Concluído'),
-                    ),
-                  ],
-                  selected: {value},
-                  onSelectionChanged: (Set<String> newSelection) {
-                    selectedStatus.value = newSelection.first;
-                  },
-                );
-              },
-            ),
-            SizedBox(height: 8),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('Selecionar Categoria'),
-                        content: Text('Aqui você pode escolher uma categoria.'),
-                        actions: <Widget>[
-                          TextButton(
-                            child: Text('Cancelar'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          TextButton(
-                            child: Text('Selecionar'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-                child: Text('Categoria', style: TextStyle(color: Colors.black),),
-              ),
-            ),
-            SizedBox(height: 4),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.black),
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    // Ação de edição
-                  } else if (value == 'delete') {
-                    // Ação de exclusão
-                  }
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'edit',
-                    child: Text('Editar'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Text('Deletar'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
