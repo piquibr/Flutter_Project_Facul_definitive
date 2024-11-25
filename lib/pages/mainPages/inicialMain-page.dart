@@ -354,14 +354,31 @@ class _InicialMainPageState extends State<InicialMainPage> {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lembretes:'),
-                Text(
-                  reminder['titulo'],
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
+                Expanded(
+                  child: RichText(
+                    textAlign: TextAlign.left,
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Lembretes: ',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        TextSpan(
+                          text: reminder['titulo'],
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Text(
                   '${reminder['dataHora']}',
@@ -418,13 +435,24 @@ class _InicialMainPageState extends State<InicialMainPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Tarefas:"),
                 Text(
-                  task['titulo'],
+                  "Tarefas:",
                   style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    task['titulo'],
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black),
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
                 ),
                 Text(
                   '${task['horario']}',
