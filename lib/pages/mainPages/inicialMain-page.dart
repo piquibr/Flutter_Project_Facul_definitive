@@ -111,15 +111,12 @@ class _InicialMainPageState extends State<InicialMainPage> {
       final matchesEndDate =
           endDate == null || DateTime.parse(task['horario']).isBefore(endDate!);
       final matchesType = selectedType == null || task['tipo'] == selectedType;
-      final matchesCategory =
-          selectedCategory == null || task['categoria'] == selectedCategory;
       final matchesSearchText = searchText == null ||
           task['titulo'].toLowerCase().contains(searchText!.toLowerCase());
 
       return matchesStartDate &&
           matchesEndDate &&
           matchesType &&
-          matchesCategory &&
           matchesSearchText;
     }).toList();
 
@@ -216,23 +213,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
                               onChanged: (newValue) {
                                 setState(() {
                                   selectedType = newValue;
-                                });
-                              },
-                            ),
-                            DropdownButtonFormField<String>(
-                              decoration:
-                                  InputDecoration(labelText: 'Categoria'),
-                              value: selectedCategory,
-                              items: ['Trabalho', 'Estudo', 'Pessoal']
-                                  .map((String category) {
-                                return DropdownMenuItem<String>(
-                                  value: category,
-                                  child: Text(category),
-                                );
-                              }).toList(),
-                              onChanged: (newValue) {
-                                setState(() {
-                                  selectedCategory = newValue;
                                 });
                               },
                             ),
