@@ -61,6 +61,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
   final String _userId = 'BWOXEy1N5nnn886D8ziv'; // Exemplo de ID do usuário
   String _status = 'Começar';
   String _categoria = 'Pessoal';
+  List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
 
   Future<void> _saveTask() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -118,6 +119,44 @@ class _CreatetaskState extends State<CreatetaskScreen> {
         });
       }
     }
+  }
+
+  void _addCategoria() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String novaCategoria = '';
+        return AlertDialog(
+          title: Text('Adicionar Nova Categoria'),
+          content: TextField(
+            decoration: InputDecoration(hintText: 'Digite o nome da categoria'),
+            onChanged: (value) {
+              novaCategoria = value;
+            },
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Adicionar'),
+              onPressed: () {
+                if (novaCategoria.isNotEmpty) {
+                  setState(() {
+                    _categorias.add(novaCategoria);
+                    _categoria = novaCategoria; // Seleciona a nova categoria
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -179,21 +218,31 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                 },
               ),
               SizedBox(height: 16.0),
-              DropdownButtonFormField<String>(
-                value: _categoria,
-                decoration: InputDecoration(labelText: 'Categoria'),
-                items:
-                    ['Pessoal', 'Trabalho', 'Estudo'].map((String categoria) {
-                  return DropdownMenuItem<String>(
-                    value: categoria,
-                    child: Text(categoria),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _categoria = newValue!;
-                  });
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _categoria,
+                      decoration: InputDecoration(labelText: 'Categoria'),
+                      items: _categorias.map((String categoria) {
+                        return DropdownMenuItem<String>(
+                          value: categoria,
+                          child: Text(categoria),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _categoria = newValue!;
+                        });
+                      },
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: _addCategoria,
+                    tooltip: 'Adicionar Nova Categoria',
+                  ),
+                ],
               ),
               SizedBox(height: 16.0),
               SaveTaskButton(onPressed: _saveTask),
