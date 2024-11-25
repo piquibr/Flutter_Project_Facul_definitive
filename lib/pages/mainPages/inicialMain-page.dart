@@ -405,7 +405,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Widget _buildTaskCard(task) {
     return Card(
-      color: const Color.fromARGB(230, 255, 235, 224),
+      color: const Color.fromARGB(230, 249, 142, 84),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),

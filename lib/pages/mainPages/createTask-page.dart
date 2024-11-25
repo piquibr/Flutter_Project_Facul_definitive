@@ -12,6 +12,8 @@ class ApiService {
     required String titulo,
     required String descricao,
     required String horario,
+    required String status,
+    required String categoria,
   }) async {
     final url = Uri.parse('$baseUrl/tarefas');
     final response = await http.post(
@@ -22,6 +24,8 @@ class ApiService {
         'titulo': titulo,
         'descricao': descricao,
         'horario': horario,
+        'status': status,
+        'categoria': categoria,
       }),
     );
 
@@ -54,7 +58,9 @@ class _CreatetaskState extends State<CreatetaskScreen> {
   String _descricao = '';
   DateTime _dataLimite = DateTime.now();
   TimeOfDay _horaLimite = TimeOfDay.now();
-  final String _userId = 'BWOXEy1N5nnn886D8ziv';
+  final String _userId = 'BWOXEy1N5nnn886D8ziv'; // Exemplo de ID do usuário
+  String _status = 'Começar';
+  String _categoria = 'Pessoal';
 
   Future<void> _saveTask() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -77,6 +83,8 @@ class _CreatetaskState extends State<CreatetaskScreen> {
           titulo: _titulo,
           descricao: _descricao,
           horario: formattedHorario,
+          status: _status,
+          categoria: _categoria,
         );
         print('Tarefa salva com sucesso: ${response['id']}');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -138,6 +146,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                   _titulo = value!;
                 },
               ),
+              SizedBox(height: 16.0),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Descrição'),
                 maxLines: 5,
@@ -152,6 +161,41 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                 label: Text(
                     '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
               ),
+              SizedBox(height: 16.0),
+              DropdownButtonFormField<String>(
+                value: _status,
+                decoration: InputDecoration(labelText: 'Status'),
+                items:
+                    ['Começar', 'Andamento', 'Concluída'].map((String status) {
+                  return DropdownMenuItem<String>(
+                    value: status,
+                    child: Text(status),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _status = newValue!;
+                  });
+                },
+              ),
+              SizedBox(height: 16.0),
+              DropdownButtonFormField<String>(
+                value: _categoria,
+                decoration: InputDecoration(labelText: 'Categoria'),
+                items:
+                    ['Pessoal', 'Trabalho', 'Estudo'].map((String categoria) {
+                  return DropdownMenuItem<String>(
+                    value: categoria,
+                    child: Text(categoria),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _categoria = newValue!;
+                  });
+                },
+              ),
+              SizedBox(height: 16.0),
               SaveTaskButton(onPressed: _saveTask),
             ],
           ),
