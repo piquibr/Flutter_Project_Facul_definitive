@@ -135,17 +135,19 @@ app.delete("/api/tarefas/:id", async (req, res) => {
 app.put("/api/tarefas/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID da tarefa a ser atualizada
-    const { titulo, descricao, horario } = req.body;
+    const { titulo, descricao, horario, status, categoria } = req.body;
 
     // Verifica se os campos necessários foram fornecidos
-    if (!titulo && !descricao && !horario ) {
+    if (!titulo && !descricao && !horario && !status && !categoria) {
       return res.status(400).json({ error: "Nenhum campo para atualizar foi fornecido!" });
     }
 
     const atualizacoes = {};
     if (titulo) atualizacoes.titulo = titulo;
     if (descricao) atualizacoes.descricao = descricao;
-    if (horario) atualizacoes.horario = new Date(horario); // Formato de data
+    if (horario) atualizacoes.horario = moment(horario, "DD/MM/YYYY HH:mm").toDate();
+    if (status) atualizacoes.status = status;
+    if (categoria) atualizacoes.categoria = categoria;
 
     // Atualiza a tarefa no Firestore
     const tarefaRef = db.collection("tarefas").doc(id);
@@ -162,6 +164,7 @@ app.put("/api/tarefas/:id", async (req, res) => {
     res.status(500).json({ error: "Erro ao atualizar tarefa." });
   }
 });
+
 // Rota para adicionar um lembrete ao Firestore (associado a um usuário)
 app.post("/api/lembretes", async (req, res) => {
   try {
