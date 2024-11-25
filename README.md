@@ -1,7 +1,7 @@
 # Projeto ToDoList - A3 - Anima
 
 ### Dados dos Alunos
-Davidson Piqui RA 822226778
+Davidson Piqui RA 822226778.
 Eduardo Augusto Santos Pinheiro - RA 12823213606
 José Vitor Cunha Barboza - RA: 12523171336
 Lucas Lima Ribeiro - RA: 12723130989
