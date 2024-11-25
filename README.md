@@ -1,24 +1,24 @@
 # Projeto ToDoList - A3 - Anima
 
 ### Dados dos Alunos
-• Davidson Piqui RA 822226778
-• Eduardo Augusto Santos Pinheiro - RA 12823213606
-• José Vitor Cunha Barboza - RA: 12523171336
-• Lucas Lima Ribeiro - RA: 12723130989
-• Manoel Vinicius Silva Souza - RA: 722315125
-• Nathan Almeida Gois - RA: 722311425
-• Paulo Sérgio - RA: 722310346
+Davidson Piqui RA 822226778
+Eduardo Augusto Santos Pinheiro - RA 12823213606
+José Vitor Cunha Barboza - RA: 12523171336
+Lucas Lima Ribeiro - RA: 12723130989
+Manoel Vinicius Silva Souza - RA: 722315125
+Nathan Almeida Gois - RA: 722311425
+Paulo Sérgio - RA: 722310346
 
 
 
-• Link Youtube - 
+• Link Video - 
 • Um link para a loja ou o local onde está publicada a APK - 
 
 
 ### Requisitos do Aplicativo de To-Do List e Lembretes
  
 ### 1. Visão Geral O aplicativo de controle de tarefas e lembretes será desenvolvido utilizando
-o framework Flutter, com o objetivo de facilitar o gerenciamento de atividades diárias de
+• Framework Flutter, com o objetivo de facilitar o gerenciamento de atividades diárias de
 maneira eficiente e intuitiva.
 ### 2. Funcionalidades Principais
 ### 2.1. Gerenciamento de Tarefas
