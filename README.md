@@ -84,8 +84,3 @@ o Um link para a loja ou o local onde está publicada a APK
 o Um vídeo demo do App
 
 
-
-Manoel Vinicius Silva Souza - RA: 722315125
-Nathan Almeida Gois - RA: 722311425
-Paulo Sérgio - RA: 722310346
-
