@@ -31,13 +31,43 @@ class _InicialMainPageState extends State<InicialMainPage> {
   String? selectedType;
   String? selectedCategory;
   String? searchText;
+  List reminders = [];
   List tasks = [];
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    fetchReminders();
     fetchTasks();
+  }
+
+  Future<void> fetchReminders() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final userId = 'BWOXEy1N5nnn886D8ziv';
+      final response = await http
+          .get(Uri.parse('http://localhost:8080/api/lembretes/$userId'));
+      if (response.statusCode == 200) {
+        setState(() {
+          reminders = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        throw Exception('Failed to load reminders');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error fetching reminders: $e');
+    }
   }
 
   Future<void> fetchTasks() async {
@@ -57,7 +87,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
       } else {
         setState(() {
           isLoading = false;
-          tasks = json.decode(response.body);
         });
         throw Exception('Failed to load tasks');
       }
@@ -65,7 +94,23 @@ class _InicialMainPageState extends State<InicialMainPage> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching tasks: \$e');
+      print('Error fetching tasks: $e');
+    }
+  }
+
+  Future<void> deleteReminder(String reminderId) async {
+    try {
+      final response = await http.delete(Uri.parse(
+          'http://localhost:8080/api/lembretes/BWOXEy1N5nnn886D8ziv/$reminderId'));
+      if (response.statusCode == 200) {
+        setState(() {
+          reminders.removeWhere((reminder) => reminder['id'] == reminderId);
+        });
+      } else {
+        throw Exception('Failed to delete reminder');
+      }
+    } catch (e) {
+      print('Error deleting reminder: $e');
     }
   }
 
@@ -104,23 +149,31 @@ class _InicialMainPageState extends State<InicialMainPage> {
   }
 
   void applyFilters() {
-    // Filtrar tarefas aqui
+    // Implementação de filtros, incluindo lembretes e tarefas.
+    List filteredReminders = reminders.where((reminder) {
+      final matchesStartDate = startDate == null ||
+          DateTime.parse(reminder['dataHora']).isAfter(startDate!);
+      final matchesEndDate = endDate == null ||
+          DateTime.parse(reminder['dataHora']).isBefore(endDate!);
+      final matchesSearchText = searchText == null ||
+          reminder['titulo'].toLowerCase().contains(searchText!.toLowerCase());
+
+      return matchesStartDate && matchesEndDate && matchesSearchText;
+    }).toList();
+
     List filteredTasks = tasks.where((task) {
       final matchesStartDate = startDate == null ||
           DateTime.parse(task['horario']).isAfter(startDate!);
       final matchesEndDate =
           endDate == null || DateTime.parse(task['horario']).isBefore(endDate!);
-      final matchesType = selectedType == null || task['tipo'] == selectedType;
       final matchesSearchText = searchText == null ||
           task['titulo'].toLowerCase().contains(searchText!.toLowerCase());
 
-      return matchesStartDate &&
-          matchesEndDate &&
-          matchesType &&
-          matchesSearchText;
+      return matchesStartDate && matchesEndDate && matchesSearchText;
     }).toList();
 
     setState(() {
+      reminders = List.from(filteredReminders);
       tasks = List.from(filteredTasks);
     });
   }
@@ -201,21 +254,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
                               trailing: Icon(Icons.calendar_today),
                               onTap: () => _selectDate(context, false),
                             ),
-                            DropdownButtonFormField<String>(
-                              decoration: InputDecoration(labelText: 'Tipo'),
-                              value: selectedType,
-                              items: ['Lembrete', 'Tarefa'].map((String type) {
-                                return DropdownMenuItem<String>(
-                                  value: type,
-                                  child: Text(type),
-                                );
-                              }).toList(),
-                              onChanged: (newValue) {
-                                setState(() {
-                                  selectedType = newValue;
-                                });
-                              },
-                            ),
                           ],
                         ),
                         actions: <Widget>[
@@ -244,71 +282,15 @@ class _InicialMainPageState extends State<InicialMainPage> {
               child: isLoading
                   ? Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                      itemCount: tasks.length,
+                      itemCount: reminders.length + tasks.length,
                       itemBuilder: (context, index) {
-                        final task = tasks[index];
-                        return Card(
-                          color: const Color.fromARGB(230, 255, 235, 224),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      task['titulo'],
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black),
-                                    ),
-                                    Text(
-                                      '${task['horario']}',
-                                      style: TextStyle(color: Colors.black),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  task['descricao'],
-                                  style: TextStyle(color: Colors.black),
-                                ),
-                                SizedBox(height: 8),
-                                Align(
-                                  alignment: Alignment.bottomRight,
-                                  child: PopupMenuButton<String>(
-                                    icon: Icon(Icons.more_vert,
-                                        color: Colors.black),
-                                    onSelected: (value) {
-                                      if (value == 'edit') {
-                                        // Ação de edição
-                                      } else if (value == 'delete') {
-                                        deleteTask(task['id']);
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) =>
-                                        <PopupMenuEntry<String>>[
-                                      const PopupMenuItem<String>(
-                                        value: 'edit',
-                                        child: Text('Editar'),
-                                      ),
-                                      const PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Text('Deletar'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+                        if (index < reminders.length) {
+                          final reminder = reminders[index];
+                          return _buildReminderCard(reminder);
+                        } else {
+                          final task = tasks[index - reminders.length];
+                          return _buildTaskCard(task);
+                        }
                       },
                     ),
             ),
@@ -355,6 +337,130 @@ class _InicialMainPageState extends State<InicialMainPage> {
           );
         },
         child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildReminderCard(reminder) {
+    return Card(
+      color: const Color.fromARGB(230, 255, 235, 224),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  reminder['titulo'],
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
+                ),
+                Text(
+                  '${reminder['dataHora']}',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
+            SizedBox(height: 4),
+            Text(
+              reminder['descricao'],
+              style: TextStyle(color: Colors.black),
+            ),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: Colors.black),
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    // Ação de edição para lembrete
+                  } else if (value == 'delete') {
+                    deleteReminder(reminder['id']);
+                  }
+                },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'edit',
+                    child: Text('Editar'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('Deletar'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskCard(task) {
+    return Card(
+      color: const Color.fromARGB(230, 255, 235, 224),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  task['titulo'],
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
+                ),
+                Text(
+                  '${task['horario']}',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
+            SizedBox(height: 4),
+            Text(
+              task['descricao'],
+              style: TextStyle(color: Colors.black),
+            ),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: Colors.black),
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    // Ação de edição para tarefa
+                  } else if (value == 'delete') {
+                    deleteTask(task['id']);
+                  }
+                },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'edit',
+                    child: Text('Editar'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('Deletar'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; // Biblioteca para formatação de data e hora
+
+class ApiService {
+  static const String baseUrl = 'http://localhost:8080/api';
+
+  // Criar lembrete
+  static Future<Map<String, dynamic>> createReminder({
+    required String userId,
+    required String titulo,
+    required String descricao,
+    required String dataHora,
+  }) async {
+    final url = Uri.parse('$baseUrl/lembretes');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'userId': userId,
+        'titulo': titulo,
+        'descricao': descricao,
+        'dataHora': dataHora,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Erro ao criar lembrete: ${response.body}');
+    }
+  }
+}
 
 class CreateReminder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Nova Tarefa',
+      title: 'Novo Lembrete',
       home: CreateReminderScreen(),
     );
   }
@@ -19,20 +52,74 @@ class _CreateReminderState extends State<CreateReminderScreen> {
   final _formKey = GlobalKey<FormState>();
   String _titulo = '';
   String _descricao = '';
-  String _categoria = '';
   DateTime _dataLimite = DateTime.now();
   TimeOfDay _horaLimite = TimeOfDay.now();
-  bool _concluida = false;
-  final ValueNotifier<String> _selectedStatus = ValueNotifier<String>('Começar');
+  final String _userId = 'BWOXEy1N5nnn886D8ziv'; // ID do usuário
+
+  Future<void> _saveReminder() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
+
+      final dataHora = DateTime(
+        _dataLimite.year,
+        _dataLimite.month,
+        _dataLimite.day,
+        _horaLimite.hour,
+        _horaLimite.minute,
+      );
+
+      // Formatar a data e hora conforme esperado pela API: "dd/MM/yyyy HH:mm"
+      final formattedDataHora = DateFormat('dd/MM/yyyy HH:mm').format(dataHora);
+
+      try {
+        final response = await ApiService.createReminder(
+          userId: _userId,
+          titulo: _titulo,
+          descricao: _descricao,
+          dataHora: formattedDataHora,
+        );
+        print('Lembrete salvo com sucesso: ${response['id']}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lembrete criado com sucesso!')),
+        );
+      } catch (e) {
+        print('Erro ao salvar lembrete: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao criar lembrete!')),
+        );
+      }
+    }
+  }
+
+  Future<void> _selectDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _dataLimite,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (date != null) {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: _horaLimite,
+      );
+      if (time != null) {
+        setState(() {
+          _dataLimite = date;
+          _horaLimite = time;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Cor de fundo do Scaffold
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Novo Lembrete', style: TextStyle(color: Colors.white)), // Título em branco
+        title: Text('Novo Lembrete', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-        iconTheme: IconThemeData(color: Colors.white), // Ícone de voltar em branco
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(
@@ -46,13 +133,13 @@ class _CreateReminderState extends State<CreateReminderScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8.0),
-                  color: const Color.fromARGB(40, 0, 0, 0), // Fundo cinza claro
+                  color: const Color.fromARGB(40, 0, 0, 0),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
                   child: TextFormField(
                     decoration: InputDecoration(
-                      
                       border: InputBorder.none,
                       hintText: 'Título',
                     ),
@@ -73,10 +160,11 @@ class _CreateReminderState extends State<CreateReminderScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8.0),
-                  color: const Color.fromARGB(40, 0, 0, 0), // Fundo cinza claro
+                  color: const Color.fromARGB(40, 0, 0, 0),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
                   child: TextFormField(
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -90,14 +178,16 @@ class _CreateReminderState extends State<CreateReminderScreen> {
                 ),
               ),
               SizedBox(height: 16.0),
-              TempoLimiteButton(),
+              TextButton.icon(
+                onPressed: _selectDateTime,
+                icon: Icon(Icons.calendar_today),
+                label: Text(
+                    '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
+              ),
               SizedBox(height: 16.0),
               SaveTaskButton(
-                onPressed: () {
-                  // Ação ao pressionar o botão, por exemplo, salvar uma tarefa
-                },
+                onPressed: _saveReminder,
               )
-
             ],
           ),
         ),
@@ -116,46 +206,13 @@ class SaveTaskButton extends StatelessWidget {
     return Center(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 255, 102, 14), // Cor do botão
+          backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         ),
         onPressed: onPressed,
-        child: const Text('Salvar',
-        style: TextStyle(color: Colors.white),
+        child: const Text(
+          'Salvar',
+          style: TextStyle(color: Colors.white),
         ),
-      ),
-    );
-  }
-}
-
-class TempoLimiteButton extends StatelessWidget {
-  const TempoLimiteButton({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.calendar_today),
-              const SizedBox(width: 8.0),
-              Text('dd/mm/aa'),
-            ],
-          ),
-          Row(
-            children: [
-              Icon(Icons.access_time),
-              const SizedBox(width: 8.0),
-              Text('00:00'),
-            ],
-          ),
-        ],
       ),
     );
   }
