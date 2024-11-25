@@ -355,6 +355,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Text('Lembretes:'),
                 Text(
                   reminder['titulo'],
                   style: TextStyle(
@@ -417,6 +418,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Text("Tarefas:"),
                 Text(
                   task['titulo'],
                   style: TextStyle(
@@ -436,28 +438,45 @@ class _InicialMainPageState extends State<InicialMainPage> {
               style: TextStyle(color: Colors.black),
             ),
             SizedBox(height: 8),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.black),
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    // Ação de edição para tarefa
-                  } else if (value == 'delete') {
-                    deleteTask(task['id']);
-                  }
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'edit',
-                    child: Text('Editar'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Text('Deletar'),
-                  ),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Status: ${task['status']}',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.italic),
+                ),
+                Text(
+                  'Categoria: ${task['categoria']}',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.italic),
+                ),
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.black),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      // Ação de edição para tarefa
+                    } else if (value == 'delete') {
+                      deleteTask(task['id']);
+                    }
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Text('Editar'),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Text('Deletar'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
