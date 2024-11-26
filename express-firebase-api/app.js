@@ -280,6 +280,58 @@ app.put("/api/lembretes/:userId/:id", async (req, res) => {
   }
 });
 
+// Rota para editar uma tarefa
+app.put("/api/lembretes/:id", async (req, res) => {
+  try {
+    const { id } = req.params; // ID da tarefa a ser atualizada
+    const { titulo, descricao, horario} = req.body;
+
+    // Verifica se ao menos um campo foi fornecido
+    if (!titulo && !descricao && !horario) {
+      return res.status(400).json({
+        error: "Nenhum campo para atualizar foi fornecido!",
+        requiredFields: ["titulo", "descricao", "horario"],
+      });
+    }
+
+    // Validação do campo 'horario', se fornecido
+    let parsedHorario = null;
+    if (horario) {
+      if (!moment(horario, "DD/MM/YYYY HH:mm", true).isValid()) {
+        return res.status(400).json({ error: "Formato de data/hora inválido! Use DD/MM/YYYY HH:mm." });
+      }
+      parsedHorario = moment(horario, "DD/MM/YYYY HH:mm").toDate();
+    }
+
+    // Construção do objeto de atualizações
+    const atualizacoes = {};
+    if (titulo) atualizacoes.titulo = titulo;
+    if (descricao) atualizacoes.descricao = descricao;
+    if (parsedHorario) atualizacoes.horario = parsedHorario;
+
+    // Verifica se a tarefa existe
+    const lembreteRef = db.collection("lembretes").doc(id);
+    const lembrete = await lembreteRef.get();
+
+    if (!lembrete.exists) {
+      return res.status(404).json({ error: "Lembrete não encontrado!" });
+    }
+
+    // Atualiza a tarefa no Firestore
+    await lembreteRef.update(atualizacoes);
+
+    // Retorna a resposta com os dados atualizados
+    const lembreteAtualizada = (await lembreteRef.get()).data();
+    res.status(200).json({
+      message: "Lembrete atualizada com sucesso!",
+      lembreteAtualizada,
+    });
+  } catch (error) {
+    console.error("Erro ao atualizar lembrete:", error);
+    res.status(500).json({ error: "Erro ao atualizar lembrete.", details: error.message });
+  }
+});
+
 // Rota para excluir um lembrete no Firestore (associado a um usuário)
 app.delete("/api/lembretes/:userId/:id", async (req, res) => {
   try {

@@ -112,6 +112,26 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
   late DateTime _dataLimite;
   late TimeOfDay _horaLimite;
 
+    Future<void> _selectDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _dataLimite,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (date != null) {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: _horaLimite,
+      );
+      if (time != null) {
+        setState(() {
+          _dataLimite = date;
+          _horaLimite = time;
+        });
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -223,6 +243,12 @@ Future<void> _saveReminder() async {
                 onSaved: (value) {
                   _descricao = value!;
                 },
+              ),
+              TextButton.icon(
+                onPressed: _selectDateTime,
+                icon: Icon(Icons.calendar_today),
+                label: Text(
+                    '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
               ),
 
               SizedBox(height: 16),
