@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/config-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createReminder-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createTask-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/editReminder-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/editTask-page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -123,17 +124,20 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Future<void> deleteReminder(String reminderId) async {
     try {
-      final response = await http.delete(
-          Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId/$reminderId'));
+      final url = Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId/$reminderId');
+      final response = await http.delete(url);
+
       if (response.statusCode == 200) {
         setState(() {
-          reminders.removeWhere((reminder) => reminder['id'] == reminderId);
+          reminders.removeWhere((reminder) =>
+              reminder['id'] == reminderId); // Remove da lista localmente
         });
+        print('Lembrete excluído com sucesso');
       } else {
-        throw Exception('Failed to delete reminder');
+        throw Exception('Erro ao excluir lembrete: ${response.body}');
       }
     } catch (e) {
-      print('Error deleting reminder: $e');
+      print('Erro ao excluir lembrete: $e');
     }
   }
 
@@ -231,6 +235,22 @@ class _InicialMainPageState extends State<InicialMainPage> {
     if (result == true) {
       // Recarregar as tarefas após criar uma nova
       fetchTasks();
+    }
+  }
+
+  // Criar lembrete
+
+  Future<void> _navigateToCreateReminder() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateReminder(userId: userId), // Passe o userId
+      ),
+    );
+
+    if (result == true) {
+      // Recarregar as tarefas após criar uma nova
+      fetchReminders();
     }
   }
 
@@ -367,13 +387,21 @@ class _InicialMainPageState extends State<InicialMainPage> {
                     ListTile(
                       leading: Icon(Icons.note_add),
                       title: Text('Criar Lembretes'),
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CreateReminderScreen(userId: userId),
+                            builder: (context) =>
+                                CreateReminderScreen(userId: userId),
                           ),
                         );
+                        // Fecha o modal bottom sheet
+                        Navigator.pop(context);
+
+                        if (result == true) {
+                          // Recarrega a lista de tarefas após criar uma nova
+                          fetchReminders();
+                        }
                       },
                     ),
                     ListTile(
@@ -410,7 +438,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Widget _buildReminderCard(reminder) {
     return Card(
-      color: const Color.fromARGB(230, 255, 235, 224),
+      color: const Color.fromARGB(230, 255, 212, 189),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -426,13 +454,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
                   child: Text(
                     reminder['titulo'],
                     style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
                 Text(
-                  '${reminder['dataHora']}',
+                  '${reminder['horario']}',
                   style: TextStyle(color: Colors.black),
                 ),
               ],
@@ -442,29 +471,80 @@ class _InicialMainPageState extends State<InicialMainPage> {
               reminder['descricao'],
               style: TextStyle(color: Colors.black),
             ),
-            SizedBox(height: 8),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.black),
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    // Ação de edição para lembrete
-                  } else if (value == 'delete') {
-                    deleteReminder(reminder['id']);
-                  }
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'edit',
-                    child: Text('Editar'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Text('Deletar'),
-                  ),
-                ],
-              ),
+            SizedBox(height: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.black),
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      final updated = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => 
+                          CreateEditReminderScreen(reminder: reminder, userId: userId)
+                          ,
+                        ),
+                      );
+
+                      if (updated == true) {
+                        fetchReminders(); // Atualiza a lista após edição
+                      }
+                    } else if (value == 'delete') {
+                      final shouldDelete = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text('Confirmar Exclusão'),
+                            content: Text(
+                                'Tem certeza de que deseja excluir este lembrete?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, false), // Cancela
+                                child: Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, true), // Confirma
+                                child: Text('Excluir'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (shouldDelete == true) {
+                        try {
+                          await deleteReminder(reminder['id'].toString());
+                          fetchReminders(); // Recarrega a lista de tarefas
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Lembrete excluído com sucesso!')),
+                          );
+                        } catch (e) {
+                          print('Erro ao excluir Lembrete: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Erro ao excluir o lembrete!')),
+                          );
+                        }
+                      }
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Text('Editar'),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Text('Deletar'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),

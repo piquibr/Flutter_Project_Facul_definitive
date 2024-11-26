@@ -6,44 +6,56 @@ import 'package:intl/intl.dart'; // Biblioteca para formatação de data e hora
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8080/api';
 
-  // Criar lembrete
+// Criar lembrete
   static Future<Map<String, dynamic>> createReminder({
     required String userId,
     required String titulo,
     required String descricao,
-    required String dataHora,
+    required String horario,
   }) async {
     final url = Uri.parse('$baseUrl/lembretes');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'userId': userId,
-        'titulo': titulo,
-        'descricao': descricao,
-        'dataHora': dataHora,
-      }),
-    );
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'userId': userId,
+          'titulo': titulo,
+          'descricao': descricao,
+          'horario': horario, // Alterado de dataHora para horario
+        }),
+      );
 
-    if (response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Erro ao criar lembrete: ${response.body}');
+      if (response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Erro ao criar lembrete: ${response.body}');
+      }
+    } catch (e) {
+      print('Erro ao conectar à API: $e');
+      rethrow;
     }
   }
 }
 
 class CreateReminder extends StatelessWidget {
+  final String userId; // Recebe o userId como argumento
+  const CreateReminder({Key? key, required this.userId}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Novo Lembrete',
-      home: CreateReminderScreen(),
+      home: CreateReminderScreen(userId: userId),
     );
   }
 }
 
 class CreateReminderScreen extends StatefulWidget {
+  final String userId; // Recebe o userId como argumento
+  const CreateReminderScreen({Key? key, required this.userId})
+      : super(key: key);
+
   @override
   _CreateReminderState createState() => _CreateReminderState();
 }
@@ -54,13 +66,19 @@ class _CreateReminderState extends State<CreateReminderScreen> {
   String _descricao = '';
   DateTime _dataLimite = DateTime.now();
   TimeOfDay _horaLimite = TimeOfDay.now();
-  final String _userId = 'BWOXEy1N5nnn886D8ziv'; // ID do usuário
+  late String _userId; // Para armazenar o userId localmente
+
+  @override
+  void initState() {
+    super.initState();
+    _userId = widget.userId; // Inicializa o userId a partir do widget recebido
+  }
 
   Future<void> _saveReminder() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      final dataHora = DateTime(
+      final horario = DateTime(
         _dataLimite.year,
         _dataLimite.month,
         _dataLimite.day,
@@ -68,28 +86,46 @@ class _CreateReminderState extends State<CreateReminderScreen> {
         _horaLimite.minute,
       );
 
-      // Formatar a data e hora conforme esperado pela API: "dd/MM/yyyy HH:mm"
-      final formattedDataHora = DateFormat('dd/MM/yyyy HH:mm').format(dataHora);
+      final formattedHorario = DateFormat('dd/MM/yyyy HH:mm').format(horario);
+
+      // Exibe indicador de carregamento
+
+      /** 
+      
+            showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+
+      */
 
       try {
-        final response = await ApiService.createReminder(
-          userId: _userId,
+        await ApiService.createReminder(
+          userId: widget.userId,
           titulo: _titulo,
           descricao: _descricao,
-          dataHora: formattedDataHora,
+          horario: formattedHorario,
         );
-        print('Lembrete salvo com sucesso: ${response['id']}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lembrete criado com sucesso!')),
-        );
-      } catch (e) {
-        print('Erro ao salvar lembrete: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar lembrete!')),
-        );
-      }
+        print('Lembrete salvo com sucesso');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lembrete criado com sucesso!')),
+      );
+
+      Navigator.pop(context, true); // Retorna um indicador de sucesso
+    } catch (e) {
+      print('Erro ao salvar Lembrete: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao criar Lembrete!')),
+      );
     }
   }
+}
 
   Future<void> _selectDateTime() async {
     final date = await showDatePicker(
@@ -117,9 +153,14 @@ class _CreateReminderState extends State<CreateReminderScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Novo Lembrete', style: TextStyle(color: Colors.white)),
+        title: Text('Novo Lembrete'),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-        iconTheme: IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context); // Volta à tela anterior
+          },
+        ),
       ),
       resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(
@@ -129,53 +170,17 @@ class _CreateReminderState extends State<CreateReminderScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8.0),
-                  color: const Color.fromARGB(40, 0, 0, 0),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 12.0),
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Título',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira um título';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      _titulo = value!;
-                    },
-                  ),
-                ),
+              _buildTextField(
+                hint: 'Título',
+                onSaved: (value) => _titulo = value!,
+                validator: (value) =>
+                    value!.isEmpty ? 'Por favor, insira um título' : null,
               ),
               SizedBox(height: 16.0),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8.0),
-                  color: const Color.fromARGB(40, 0, 0, 0),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 12.0),
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Descrição',
-                    ),
-                    maxLines: 5,
-                    onSaved: (value) {
-                      _descricao = value!;
-                    },
-                  ),
-                ),
+              _buildTextField(
+                hint: 'Descrição',
+                onSaved: (value) => _descricao = value!,
+                maxLines: 5,
               ),
               SizedBox(height: 16.0),
               TextButton.icon(
@@ -185,7 +190,7 @@ class _CreateReminderState extends State<CreateReminderScreen> {
                     '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
               ),
               SizedBox(height: 16.0),
-              SaveTaskButton(
+              SaveReminderButton(
                 onPressed: _saveReminder,
               )
             ],
@@ -194,12 +199,40 @@ class _CreateReminderState extends State<CreateReminderScreen> {
       ),
     );
   }
+
+  Widget _buildTextField({
+    required String hint,
+    required void Function(String?) onSaved,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8.0),
+        color: const Color.fromARGB(40, 0, 0, 0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: TextFormField(
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: hint,
+          ),
+          validator: validator,
+          onSaved: onSaved,
+          maxLines: maxLines,
+        ),
+      ),
+    );
+  }
 }
 
-class SaveTaskButton extends StatelessWidget {
+class SaveReminderButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const SaveTaskButton({Key? key, required this.onPressed}) : super(key: key);
+  const SaveReminderButton({Key? key, required this.onPressed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
