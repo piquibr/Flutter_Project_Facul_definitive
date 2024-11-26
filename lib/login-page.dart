@@ -152,27 +152,31 @@ class LoginButton extends StatelessWidget {
 
     try {
       print('Attempting login with email: $email');
+
       final response = await http.post(
-        Uri.parse(
-            'http://localhost:8080/login'), // URL ajustada para funcionar no emulador Android
+        Uri.parse('http://192.168.56.1:8080/login'), // Ajuste para o IP correto
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'senha': senha}),
       );
 
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final token = data['token']; // Supondo que a API retorna um token
-        final userId = (data['id'] ?? 'default_user_id')
-            .toString(); // Garante que userId não seja nulo
 
-        if (userId == 'default_user_id') {
-          // Caso o userId não esteja presente, exibir uma mensagem de erro
+        if (data == null || data['id'] == null) {
+          print('Erro: userId não encontrado na resposta da API.');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Erro ao obter ID do usuário. Tente novamente.')),
           );
           return;
         }
+
+        final token = data['token']; // Supondo que a API retorna um token
+        final userId =
+            data['id'].toString(); // Garantindo que o userId é uma String
 
         print('Login successful. Token: $token, User ID: $userId');
 
@@ -181,7 +185,7 @@ class LoginButton extends StatelessWidget {
           MaterialPageRoute(builder: (context) => InicialMain(userId: userId)),
         );
       } else {
-        final error = jsonDecode(response.body)['error'];
+        final error = jsonDecode(response.body)['error'] ?? 'Erro desconhecido';
         print('Login failed. Error: $error');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro: $error')),

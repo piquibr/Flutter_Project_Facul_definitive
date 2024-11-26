@@ -297,42 +297,29 @@ app.get("/api/lembretes/:userId", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, senha } = req.body;
 
-  if (!email || !senha) {
-    return res.status(400).send({ error: "E-mail e senha são obrigatórios!" });
-  }
-
   try {
-    const emailNormalizado = email.toLowerCase().trim();
-    const usuarios = await db.collection("usuarios").where("email", "==", emailNormalizado).get();
+    const userSnapshot = await db.collection("usuarios").where("email", "==", email).get();
 
-    if (usuarios.empty) {
-      return res.status(401).send({ error: "E-mail ou senha inválidos!" });
+    if (userSnapshot.empty) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    const usuarioDoc = usuarios.docs[0];
-    const usuario = usuarioDoc.data();
+    const userDoc = userSnapshot.docs[0];
+    const userData = userDoc.data();
 
-    const senhaValida = await bcrypt.compare(senha, usuario.senha);
-
-    if (!senhaValida) {
-      return res.status(401).send({ error: "E-mail ou senha inválidos!" });
+    // Verifique a senha aqui
+    const isPasswordValid = await bcrypt.compare(senha, userData.senha);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Senha incorreta" });
     }
 
-    // Gera um token JWT
-    const token = jwt.sign({ id: usuarioDoc.id }, "sua_chave_secreta", { expiresIn: "1h" });
+    const userId = userDoc.id; // Obtendo o userId do documento
+    const token = "algum_token_gerado_aqui"; // Gere um token apropriado
 
-    res.status(200).send({
-      message: "Login realizado com sucesso!",
-      token,
-      usuario: {
-        id: usuarioDoc.id,
-        email: usuario.email,
-        nome: usuario.nome,
-      },
-    });
+    res.status(200).json({ token, id: userId });
   } catch (error) {
-    console.error("Erro ao autenticar:", error);
-    res.status(500).send({ error: "Erro ao autenticar." });
+    console.error("Erro durante o login:", error);
+    res.status(500).json({ error: "Erro no servidor" });
   }
 });
 
@@ -347,5 +334,5 @@ app.get("/", (req, res) => {
 // Porta do servidor
 const PORT = 8080;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando em http://192.168.56.1:${PORT}`);
 });

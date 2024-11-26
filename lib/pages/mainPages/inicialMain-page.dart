@@ -50,7 +50,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
     try {
       // Buscar lembretes
       final remindersResponse = await http.get(
-        Uri.parse('http://localhost:8080/api/lembretes/${widget.userId}'),
+        Uri.parse('http://192.168.56.1:8080/api/lembretes/${widget.userId}'),
       );
 
       if (remindersResponse.statusCode == 200) {
@@ -62,7 +62,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
       // Buscar tarefas
       final tasksResponse = await http.get(
-        Uri.parse('http://localhost:8080/api/tarefas/${widget.userId}'),
+        Uri.parse('http://192.168.56.1:8080/api/tarefas/${widget.userId}'),
       );
 
       if (tasksResponse.statusCode == 200) {
@@ -82,8 +82,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
   Future<void> deleteReminder(String reminderId) async {
     try {
       final userId = widget.userId;
-      final response = await http.delete(
-          Uri.parse('http://localhost:8080/api/lembretes/$userId/$reminderId'));
+      final response = await http.delete(Uri.parse(
+          'http://192.168.56.1:8080/api/lembretes/$userId/$reminderId'));
       if (response.statusCode == 200) {
         setState(() {
           reminders.removeWhere((reminder) => reminder['id'] == reminderId);
@@ -99,7 +99,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
   Future<void> deleteTask(String taskId) async {
     try {
       final response = await http
-          .delete(Uri.parse('http://localhost:8080/api/tarefas/$taskId'));
+          .delete(Uri.parse('http://192.168.56.1:8080/api/tarefas/$taskId'));
       if (response.statusCode == 200) {
         setState(() {
           tasks.removeWhere((task) => task['id'] == taskId);
