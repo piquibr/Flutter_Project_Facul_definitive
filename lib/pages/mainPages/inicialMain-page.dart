@@ -17,15 +17,12 @@ class InicialMain extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: InicialMainPage(userId: userId),
+      home: InicialMainPage(),
     );
   }
 }
 
 class InicialMainPage extends StatefulWidget {
-  final String userId;
-  const InicialMainPage({required this.userId});
-
   @override
   _InicialMainPageState createState() => _InicialMainPageState();
 }
@@ -43,85 +40,95 @@ class _InicialMainPageState extends State<InicialMainPage> {
   @override
   void initState() {
     super.initState();
-    fetchData();
+    fetchReminders();
+    fetchTasks();
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchReminders() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      print('Buscando lembretes para userId: ${widget.userId}');
-      // Buscar lembretes
-      final remindersResponse = await http.get(
-        Uri.parse('http://192.168.56.1:8080/api/lembretes/${widget.userId}'),
-      );
-
-      if (remindersResponse.statusCode == 200) {
+      final userId = 'BWOXEy1N5nnn886D8ziv';
+      final response = await http
+          .get(Uri.parse('http://localhost:8080/api/lembretes/$userId'));
+      if (response.statusCode == 200) {
         setState(() {
-          reminders = jsonDecode(remindersResponse.body);
+          reminders = json.decode(response.body);
+          isLoading = false;
         });
-        print('Lembretes buscados com sucesso: $reminders');
       } else {
-        print(
-            'Falha ao buscar lembretes. Código: ${remindersResponse.statusCode}');
-      }
-
-      print('Buscando tarefas para userId: ${widget.userId}');
-      // Buscar tarefas
-      final tasksResponse = await http.get(
-        Uri.parse('http://192.168.56.1:8080/api/tarefas/${widget.userId}'),
-      );
-
-      if (tasksResponse.statusCode == 200) {
         setState(() {
-          tasks = jsonDecode(tasksResponse.body);
+          isLoading = false;
         });
-        print('Tarefas buscadas com sucesso: $tasks');
-      } else {
-        print('Falha ao buscar tarefas. Código: ${tasksResponse.statusCode}');
+        throw Exception('Failed to load reminders');
       }
     } catch (e) {
-      print('Erro ao buscar dados: $e');
-    } finally {
       setState(() {
         isLoading = false;
       });
+      print('Error fetching reminders: $e');
+    }
+  }
+
+  Future<void> fetchTasks() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final userId = 'BWOXEy1N5nnn886D8ziv';
+      final response = await http
+          .get(Uri.parse('http://localhost:8080/api/tarefas/$userId'));
+      if (response.statusCode == 200) {
+        setState(() {
+          tasks = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        throw Exception('Failed to load tasks');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error fetching tasks: $e');
     }
   }
 
   Future<void> deleteReminder(String reminderId) async {
     try {
-      print('Deletando lembrete com ID: $reminderId');
-      final userId = widget.userId;
       final response = await http.delete(Uri.parse(
-          'http://192.168.56.1:8080/api/lembretes/$userId/$reminderId'));
+          'http://localhost:8080/api/lembretes/BWOXEy1N5nnn886D8ziv/$reminderId'));
       if (response.statusCode == 200) {
         setState(() {
           reminders.removeWhere((reminder) => reminder['id'] == reminderId);
         });
-        print('Lembrete deletado com sucesso');
       } else {
-        print('Falha ao deletar lembrete. Código: ${response.statusCode}');
+        throw Exception('Failed to delete reminder');
       }
     } catch (e) {
-      print('Erro ao deletar lembrete: $e');
+      print('Error deleting reminder: $e');
     }
   }
 
   Future<void> deleteTask(String taskId) async {
     try {
-      print('Deletando tarefa com ID: $taskId');
-      final response = await http.delete(
-        Uri.parse('http://192.168.56.1:8080/api/tarefas/$taskId'),
-      );
+      final response = await http
+          .delete(Uri.parse('http://localhost:8080/api/tarefas/$taskId'));
       if (response.statusCode == 200) {
         setState(() {
           tasks.removeWhere((task) => task['id'] == taskId);
         });
-        print('Tarefa deletada com sucesso');
       } else {
-        print('Falha ao deletar tarefa. Código: ${response.statusCode}');
+        throw Exception('Failed to delete task');
       }
     } catch (e) {
-      print('Erro ao deletar tarefa: $e');
+      print(e);
     }
   }
 
@@ -144,8 +151,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
   }
 
   void applyFilters() {
-    print('Aplicando filtros...');
-    // Implementação de filtros, incluindo lembretes e tarefas.
     List filteredReminders = reminders.where((reminder) {
       final matchesStartDate = startDate == null ||
           DateTime.parse(reminder['dataHora']).isAfter(startDate!);
@@ -172,7 +177,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
       reminders = List.from(filteredReminders);
       tasks = List.from(filteredTasks);
     });
-    print('Filtros aplicados. Lembretes: $reminders, Tarefas: $tasks');
   }
 
   @override
@@ -351,30 +355,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: RichText(
-                    textAlign: TextAlign.left,
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Lembretes: ',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        TextSpan(
-                          text: reminder['titulo'],
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: Text(
+                    reminder['titulo'],
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
                   ),
                 ),
                 Text(
@@ -432,23 +420,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Tarefas:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                ),
                 Expanded(
                   child: Text(
                     task['titulo'],
                     style: TextStyle(
-                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                       color: Colors.black,
                     ),
-                    textAlign: TextAlign.left,
                   ),
                 ),
                 Text(
