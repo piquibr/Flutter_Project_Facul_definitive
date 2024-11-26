@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // Importar para formatação de datas
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://10.0.2.2:8080/api';
+
 
   // Criar tarefa
   static Future<Map<String, dynamic>> createTask({
@@ -171,10 +172,12 @@ class _CreatetaskState extends State<CreatetaskScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             //TODO: Implementar a lógica de cadastro
-            //Navigator.push(//
-            //context,
-            //MaterialPageRoute(builder: (context) => InicialMain(userId: userId)),
-            //);
+            print(_userId);
+            Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => InicialMain(userId: _userId)),
+            );
+            
           },
         ),
       ),

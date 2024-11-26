@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/config-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createReminder-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/createTask-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/editTask-page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -31,8 +32,8 @@ class InicialMainPage extends StatefulWidget {
 }
 
 class _InicialMainPageState extends State<InicialMainPage> {
-  late String userId = widget.userId
-      .toString(); // Agora será inicializado com o valor passado pelo widget
+  late String userId = widget.userId.toString(); // Agora será inicializado com o valor passado pelo widget
+
   DateTime? startDate;
   DateTime? endDate;
   String? selectedType;
@@ -45,8 +46,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
   @override
   void initState() {
     super.initState();
-    userId =
-        widget.userId.toString(); // Inicializa o userId com o valor recebido
+    userId = widget.userId.toString(); // Inicializa o userId com o valor recebido
     fetchReminders();
     fetchTasks();
   }
@@ -59,7 +59,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
     print("Fetching reminders for userId: $userId"); // Adicionado debug
     try {
       final response = await http
-          .get(Uri.parse('http://localhost:8080/api/lembretes/$userId'));
+          .get(Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId'));
       print(
           "Response status for reminders: ${response.statusCode}"); // Status do HTTP
       print(
@@ -94,7 +94,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
     print("Fetching tasks for userId: $userId"); // Debug
     try {
       final response = await http
-          .get(Uri.parse('http://localhost:8080/api/tarefas/$userId'));
+          .get(Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId'));
       print(
           "Response status for tasks: ${response.statusCode}"); // Debug do status
       print("Response body for tasks: ${response.body}"); // Debug do corpo
@@ -482,6 +482,15 @@ class _InicialMainPageState extends State<InicialMainPage> {
                   icon: Icon(Icons.more_vert, color: Colors.black),
                   onSelected: (value) {
                     if (value == 'edit') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CreateEditTaskScreen(
+                          userId: userId, // Passa o userId
+                          task: task, // Passa a tarefa a ser editada
+                        ),
+                      ),
+                    );
                       // Ação de edição para tarefa
                     } else if (value == 'delete') {
                       deleteTask(task['id']);

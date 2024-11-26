@@ -132,24 +132,38 @@ app.delete("/api/tarefas/:id", async (req, res) => {
 });
 
 // Rota para editar uma tarefa
+// Rota para editar uma tarefa
 app.put("/api/tarefas/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID da tarefa a ser atualizada
     const { titulo, descricao, horario, status, categoria } = req.body;
 
-    // Verifica se os campos necessários foram fornecidos
+    // Verifica se ao menos um campo foi fornecido
     if (!titulo && !descricao && !horario && !status && !categoria) {
-      return res.status(400).json({ error: "Nenhum campo para atualizar foi fornecido!" });
+      return res.status(400).json({
+        error: "Nenhum campo para atualizar foi fornecido!",
+        requiredFields: ["titulo", "descricao", "horario", "status", "categoria"],
+      });
     }
 
+    // Validação do campo 'horario', se fornecido
+    let parsedHorario = null;
+    if (horario) {
+      if (!moment(horario, "DD/MM/YYYY HH:mm", true).isValid()) {
+        return res.status(400).json({ error: "Formato de data/hora inválido! Use DD/MM/YYYY HH:mm." });
+      }
+      parsedHorario = moment(horario, "DD/MM/YYYY HH:mm").toDate();
+    }
+
+    // Construção do objeto de atualizações
     const atualizacoes = {};
     if (titulo) atualizacoes.titulo = titulo;
     if (descricao) atualizacoes.descricao = descricao;
-    if (horario) atualizacoes.horario = moment(horario, "DD/MM/YYYY HH:mm").toDate();
+    if (parsedHorario) atualizacoes.horario = parsedHorario;
     if (status) atualizacoes.status = status;
     if (categoria) atualizacoes.categoria = categoria;
 
-    // Atualiza a tarefa no Firestore
+    // Verifica se a tarefa existe
     const tarefaRef = db.collection("tarefas").doc(id);
     const tarefa = await tarefaRef.get();
 
@@ -157,11 +171,18 @@ app.put("/api/tarefas/:id", async (req, res) => {
       return res.status(404).json({ error: "Tarefa não encontrada!" });
     }
 
+    // Atualiza a tarefa no Firestore
     await tarefaRef.update(atualizacoes);
-    res.status(200).json({ message: "Tarefa atualizada com sucesso!" });
+
+    // Retorna a resposta com os dados atualizados
+    const tarefaAtualizada = (await tarefaRef.get()).data();
+    res.status(200).json({
+      message: "Tarefa atualizada com sucesso!",
+      tarefaAtualizada,
+    });
   } catch (error) {
     console.error("Erro ao atualizar tarefa:", error);
-    res.status(500).json({ error: "Erro ao atualizar tarefa." });
+    res.status(500).json({ error: "Erro ao atualizar tarefa.", details: error.message });
   }
 });
 

@@ -4,8 +4,18 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // Importar para formatação de datas
 
+
+DateTime parseDate(String dateString) {
+  try {
+    DateFormat format = DateFormat("dd/MM/yyyy HH:mm");
+    return format.parse(dateString);
+  } catch (e) {
+    throw FormatException("Erro ao interpretar a data: $e");
+  }
+}
+
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://10.0.2.2:8080/api';
 
   // Criar tarefa
   static Future<Map<String, dynamic>> createTask({
@@ -77,73 +87,84 @@ class ApiService {
   }
 }
 
-class CreateEditTask extends StatelessWidget {
-  final String? taskId;
+class EditTask extends StatelessWidget {
+  final Map<String, dynamic>? task; // Adicionado para receber a tarefa
+  final String userId;
 
-  const CreateEditTask({Key? key, this.taskId}) : super(key: key);
+  const EditTask({Key? key, this.task, required this.userId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: taskId == null ? 'Nova Tarefa' : 'Editar Tarefa',
-      home: CreateEditTaskScreen(taskId: taskId),
+      title: task == task.toString() ? 'Nova Tarefa' : 'Editar Tarefa',
+      home: CreateEditTaskScreen(task: task, userId: userId),
     );
   }
 }
 
 class CreateEditTaskScreen extends StatefulWidget {
-  final String? taskId;
+  final String userId;
+  final Map<String, dynamic>? task; // Tarefa opcional
 
-  const CreateEditTaskScreen({Key? key, this.taskId}) : super(key: key);
+  const CreateEditTaskScreen({Key? key, required this.userId, this.task}) : super(key: key);
 
   @override
-  _CreateEditTaskScreen createState() => _CreateEditTaskScreen();
+  _CreateEditTaskScreenState createState() => _CreateEditTaskScreenState();
 }
 
-class _CreateEditTaskScreen extends State<CreateEditTaskScreen> {
+class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _titulo = '';
-  String _descricao = '';
-  DateTime _dataLimite = DateTime.now();
-  TimeOfDay _horaLimite = TimeOfDay.now();
-  final String _userId = 'BWOXEy1N5nnn886D8ziv'; // Exemplo de ID do usuário
-  String _status = 'Começar';
-  String _categoria = 'Pessoal';
-  List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
+  late String _titulo;
+  late String _descricao;
+  late DateTime _dataLimite;
+  late TimeOfDay _horaLimite;
+  late String _status;
+  late String _categoria;
+
+  final List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
 
   @override
   void initState() {
     super.initState();
-    if (widget.taskId != null) {
-      _fetchTaskDetails(widget.taskId!);
-    }
+    _initializeTaskData();
   }
 
-  Future<void> _fetchTaskDetails(String taskId) async {
-    try {
-      final taskDetails = await ApiService.getTaskDetails(taskId);
-      setState(() {
-        _titulo = taskDetails['titulo'];
-        _descricao = taskDetails['descricao'];
-        final horario = DateTime.parse(taskDetails['horario']);
-        _dataLimite = DateTime(horario.year, horario.month, horario.day);
-        _horaLimite = TimeOfDay(hour: horario.hour, minute: horario.minute);
-        _status = taskDetails['status'];
-        _categoria = taskDetails['categoria'];
-      });
-    } catch (e) {
-      print('Erro ao obter detalhes da tarefa: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao obter detalhes da tarefa!')),
-      );
-    }
+  void _initializeTaskData() {
+  if (widget.task != null) {
+    _titulo = widget.task!['titulo'] ?? '';
+    _descricao = widget.task!['descricao'] ?? '';
+
+    // Validação do campo 'categoria'
+    _categoria = _categorias.contains(widget.task!['categoria'])
+        ? widget.task!['categoria']
+        : _categorias.first; // Define um valor padrão se inválido
+
+    // Outros campos
+    _status = ['Começar', 'Andamento', 'Concluída'].contains(widget.task!['status'])
+        ? widget.task!['status']
+        : 'Começar';
+    _dataLimite = widget.task!['horario'] != null
+        ? parseDate(widget.task!['horario'])
+        : DateTime.now();
+    _horaLimite = TimeOfDay.fromDateTime(_dataLimite);
+  } else {
+    _titulo = '';
+    _descricao = '';
+    _status = 'Começar'; // Valor padrão
+    _categoria = _categorias.first; // Primeiro valor como padrão
+    _dataLimite = DateTime.now();
+    _horaLimite = TimeOfDay.now();
+  }
+
+    // Debug prints para verificar os dados recebidos
+    print('User ID recebido: ${widget.userId}');
+    print('Tarefa recebida: ${widget.task}');
   }
 
   Future<void> _saveTask() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      // Converte a data e hora selecionada para o formato ISO-8601 compatível com a API
       final horario = DateTime(
         _dataLimite.year,
         _dataLimite.month,
@@ -152,40 +173,34 @@ class _CreateEditTaskScreen extends State<CreateEditTaskScreen> {
         _horaLimite.minute,
       );
 
-      final formattedHorario =
-          DateFormat('yyyy-MM-ddTHH:mm:ss').format(horario);
+      final formattedHorario = DateFormat("dd/MM/yyyy HH:mm").format(horario);
 
       try {
-        if (widget.taskId == null) {
+        if (widget.task == null) {
           // Criar nova tarefa
-          final response = await ApiService.createTask(
-            userId: _userId,
+          await ApiService.createTask(
+            userId: widget.userId,
             titulo: _titulo,
             descricao: _descricao,
             horario: formattedHorario,
             status: _status,
             categoria: _categoria,
           );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content:
-                    Text('Tarefa criada com sucesso! ID: ${response['id']}')),
-          );
+          print('Nova tarefa criada com sucesso');
         } else {
-          // Editar tarefa existente
+          // Atualizar tarefa existente
           await ApiService.updateTask(
-            taskId: widget.taskId!,
+            taskId: widget.task!['id'],
             titulo: _titulo,
             descricao: _descricao,
             horario: formattedHorario,
             status: _status,
             categoria: _categoria,
           );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Tarefa atualizada com sucesso!')),
-          );
+          print('Tarefa atualizada com sucesso');
         }
-        Navigator.pop(context); // Volta para a tela anterior
+
+        Navigator.pop(context); // Voltar à página anterior
       } catch (e) {
         print('Erro ao salvar tarefa: $e');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -195,39 +210,14 @@ class _CreateEditTaskScreen extends State<CreateEditTaskScreen> {
     }
   }
 
-  Future<void> _selectDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _dataLimite,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-    if (date != null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: _horaLimite,
-      );
-      if (time != null) {
-        setState(() {
-          _dataLimite = date;
-          _horaLimite = time;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.taskId == null ? 'Nova Tarefa' : 'Editar Tarefa'),
+        title: Text(widget.task == null ? 'Nova Tarefa' : 'Editar Tarefa'),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -239,7 +229,7 @@ class _CreateEditTaskScreen extends State<CreateEditTaskScreen> {
                 decoration: InputDecoration(labelText: 'Título'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, insira um título';
+                    return 'Por favor, insira o título';
                   }
                   return null;
                 },
@@ -247,80 +237,63 @@ class _CreateEditTaskScreen extends State<CreateEditTaskScreen> {
                   _titulo = value!;
                 },
               ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 16),
               TextFormField(
                 initialValue: _descricao,
                 decoration: InputDecoration(labelText: 'Descrição'),
-                maxLines: 5,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira a descrição';
+                  }
+                  return null;
+                },
                 onSaved: (value) {
                   _descricao = value!;
                 },
               ),
-              SizedBox(height: 16.0),
-              TextButton.icon(
-                onPressed: _selectDateTime,
-                icon: Icon(Icons.calendar_today),
-                label: Text(
-                    '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
-              ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _status,
+                value: _status.isNotEmpty && ['Começar', 'Andamento', 'Concluída'].contains(_status)
+                    ? _status
+                    : 'Começar', // Define um valor padrão válido
                 decoration: InputDecoration(labelText: 'Status'),
                 items: ['Começar', 'Andamento', 'Concluída']
-                    .map((String status) => DropdownMenuItem<String>(
+                    .map((status) => DropdownMenuItem(
                           value: status,
                           child: Text(status),
                         ))
                     .toList(),
-                onChanged: (newValue) {
+                onChanged: (value) {
                   setState(() {
-                    _status = newValue!;
+                    _status = value!;
                   });
                 },
               ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _categoria,
+                value: _categoria.isNotEmpty && _categorias.contains(_categoria)
+                    ? _categoria
+                    : _categorias.first, // Define o primeiro valor como padrão
                 decoration: InputDecoration(labelText: 'Categoria'),
                 items: _categorias
-                    .map((String categoria) => DropdownMenuItem<String>(
+                    .map((categoria) => DropdownMenuItem(
                           value: categoria,
                           child: Text(categoria),
                         ))
                     .toList(),
-                onChanged: (newValue) {
+                onChanged: (value) {
                   setState(() {
-                    _categoria = newValue!;
+                    _categoria = value!;
                   });
                 },
               ),
-              SizedBox(height: 16.0),
-              SaveTaskButton(onPressed: _saveTask),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _saveTask,
+                child: Text('Salvar'),
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class SaveTaskButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const SaveTaskButton({Key? key, required this.onPressed}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-        ),
-        onPressed: onPressed,
-        child: const Text(
-          'Salvar',
-          style: TextStyle(color: Colors.white),
         ),
       ),
     );
