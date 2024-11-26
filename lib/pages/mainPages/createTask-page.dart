@@ -40,68 +40,87 @@ class ApiService {
   }
 }
 
+
+
 class Createtask extends StatelessWidget {
+  final String userId; // Recebe o userId como argumento
+
+  const Createtask({Key? key, required this.userId}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Nova Tarefa',
-      home: CreatetaskScreen(),
+      home: CreatetaskScreen(userId: userId), // Passa o userId para a tela
     );
   }
 }
 
 class CreatetaskScreen extends StatefulWidget {
+  final String userId; // Recebe o userId como argumento
+
+  const CreatetaskScreen({Key? key, required this.userId}) : super(key: key);
+
   @override
   _CreatetaskState createState() => _CreatetaskState();
 }
 
 class _CreatetaskState extends State<CreatetaskScreen> {
+
   final _formKey = GlobalKey<FormState>();
   String _titulo = '';
   String _descricao = '';
   DateTime _dataLimite = DateTime.now();
   TimeOfDay _horaLimite = TimeOfDay.now();
-  final String _userId = 'BWOXEy1N5nnn886D8ziv'; // Exemplo de ID do usuário
+  late String _userId; // Para armazenar o userId localmente
   String _status = 'Começar';
   String _categoria = 'Pessoal';
   List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
 
-  Future<void> _saveTask() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+  @override
+  void initState() {
+    super.initState();
+    _userId = widget.userId; // Inicializa o userId a partir do widget recebido
+  }
 
-      final horario = DateTime(
-        _dataLimite.year,
-        _dataLimite.month,
-        _dataLimite.day,
-        _horaLimite.hour,
-        _horaLimite.minute,
+  Future<void> _saveTask() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    _formKey.currentState?.save();
+
+    final horario = DateTime(
+      _dataLimite.year,
+      _dataLimite.month,
+      _dataLimite.day,
+      _horaLimite.hour,
+      _horaLimite.minute,
+    );
+
+    final formattedHorario = DateFormat('dd/MM/yyyy HH:mm').format(horario);
+
+    try {
+      await ApiService.createTask(
+        userId: _userId,
+        titulo: _titulo,
+        descricao: _descricao,
+        horario: formattedHorario,
+        status: _status,
+        categoria: _categoria,
+      );
+      print('Tarefa salva com sucesso');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tarefa criada com sucesso!')),
       );
 
-      // Formatando a data no formato "DD/MM/YYYY HH:mm"
-      final formattedHorario = DateFormat('dd/MM/yyyy HH:mm').format(horario);
-
-      try {
-        final response = await ApiService.createTask(
-          userId: _userId,
-          titulo: _titulo,
-          descricao: _descricao,
-          horario: formattedHorario,
-          status: _status,
-          categoria: _categoria,
-        );
-        print('Tarefa salva com sucesso: ${response['id']}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tarefa criada com sucesso!')),
-        );
-      } catch (e) {
-        print('Erro ao salvar tarefa: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar tarefa!')),
-        );
-      }
+      Navigator.pop(context, true); // Retorna um indicador de sucesso
+    } catch (e) {
+      print('Erro ao salvar tarefa: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao criar tarefa!')),
+      );
     }
   }
+}
 
   Future<void> _selectDateTime() async {
     final date = await showDatePicker(
@@ -171,13 +190,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            //TODO: Implementar a lógica de cadastro
-            print(_userId);
-            Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => InicialMain(userId: _userId)),
-            );
-            
+            Navigator.pop(context); // Volta à tela anterior
           },
         ),
       ),

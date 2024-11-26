@@ -32,7 +32,8 @@ class InicialMainPage extends StatefulWidget {
 }
 
 class _InicialMainPageState extends State<InicialMainPage> {
-  late String userId = widget.userId.toString(); // Agora será inicializado com o valor passado pelo widget
+  late String userId = widget.userId
+      .toString(); // Agora será inicializado com o valor passado pelo widget
 
   DateTime? startDate;
   DateTime? endDate;
@@ -46,7 +47,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
   @override
   void initState() {
     super.initState();
-    userId = widget.userId.toString(); // Inicializa o userId com o valor recebido
+    userId =
+        widget.userId.toString(); // Inicializa o userId com o valor recebido
     fetchReminders();
     fetchTasks();
   }
@@ -93,8 +95,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
     print("Fetching tasks for userId: $userId"); // Debug
     try {
-      final response = await http
-          .get(Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId'));
+      final response =
+          await http.get(Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId'));
       print(
           "Response status for tasks: ${response.statusCode}"); // Debug do status
       print("Response body for tasks: ${response.body}"); // Debug do corpo
@@ -122,7 +124,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
   Future<void> deleteReminder(String reminderId) async {
     try {
       final response = await http.delete(
-          Uri.parse('http://localhost:8080/api/lembretes/$userId/$reminderId'));
+          Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId/$reminderId'));
       if (response.statusCode == 200) {
         setState(() {
           reminders.removeWhere((reminder) => reminder['id'] == reminderId);
@@ -138,7 +140,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
   Future<void> deleteTask(String taskId) async {
     try {
       final response = await http.delete(
-          Uri.parse('http://localhost:8080/api/tarefas/$userId/$taskId'));
+          Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId/$taskId'));
       if (response.statusCode == 200) {
         setState(() {
           tasks.removeWhere((task) => task['id'] == taskId);
@@ -199,21 +201,35 @@ class _InicialMainPageState extends State<InicialMainPage> {
   }
 
   Future<void> _navigateToEditTask(Map<String, dynamic> task) async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => CreateEditTaskScreen(
-        userId: userId,
-        task: task,
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateEditTaskScreen(
+          userId: userId,
+          task: task,
+        ),
       ),
-    ),
-  );
+    );
 
-  if (result == true) {
-    // Recarregar os dados
-    fetchTasks();
+    if (result == true) {
+      // Recarregar os dados
+      fetchTasks();
+    }
   }
-}
+
+  Future<void> _navigateToCreateTask() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Createtask(userId: userId), // Passe o userId
+      ),
+    );
+
+    if (result == true) {
+      // Recarregar as tarefas após criar uma nova
+      fetchTasks();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -352,19 +368,30 @@ class _InicialMainPageState extends State<InicialMainPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => CreateReminderScreen()),
+                            builder: (context) => CreateReminderScreen(),
+                          ),
                         );
                       },
                     ),
                     ListTile(
                       leading: Icon(Icons.task_alt),
                       title: Text('Criar Tarefas'),
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => CreatetaskScreen()),
+                            builder: (context) =>
+                                CreatetaskScreen(userId: userId),
+                          ),
                         );
+
+                        // Fecha o modal bottom sheet
+                        Navigator.pop(context);
+
+                        if (result == true) {
+                          // Recarrega a lista de tarefas após criar uma nova
+                          fetchTasks();
+                        }
                       },
                     ),
                   ],
