@@ -121,6 +121,27 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
   late String _status;
   late String _categoria;
 
+    Future<void> _selectDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _dataLimite,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (date != null) {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: _horaLimite,
+      );
+      if (time != null) {
+        setState(() {
+          _dataLimite = date;
+          _horaLimite = time;
+        });
+      }
+    }
+  }
+
   final List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
 
   @override
@@ -248,6 +269,12 @@ Future<void> _saveTask() async {
                 onSaved: (value) {
                   _descricao = value!;
                 },
+              ),
+              TextButton.icon(
+                onPressed: _selectDateTime,
+                icon: Icon(Icons.calendar_today),
+                label: Text(
+                    '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
               ),
               SizedBox(height: 16),
               DropdownButtonFormField<String>(

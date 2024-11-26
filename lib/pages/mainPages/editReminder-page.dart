@@ -112,7 +112,7 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
   late DateTime _dataLimite;
   late TimeOfDay _horaLimite;
 
-    Future<void> _selectDateTime() async {
+  Future<void> _selectDateTime() async {
     final date = await showDatePicker(
       context: context,
       initialDate: _dataLimite,
