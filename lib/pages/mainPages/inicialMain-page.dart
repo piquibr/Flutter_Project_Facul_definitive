@@ -38,7 +38,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
   String? searchText;
   List reminders = [];
   List tasks = [];
-  bool isLoading = true;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -48,25 +48,33 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Future<void> fetchData() async {
     try {
+      print('Buscando lembretes para userId: ${widget.userId}');
       // Buscar lembretes
       final remindersResponse = await http.get(
         Uri.parse('http://192.168.56.1:8080/api/lembretes/${widget.userId}'),
       );
 
       if (remindersResponse.statusCode == 200) {
-        reminders = jsonDecode(remindersResponse.body);
+        setState(() {
+          reminders = jsonDecode(remindersResponse.body);
+        });
+        print('Lembretes buscados com sucesso: $reminders');
       } else {
         print(
             'Falha ao buscar lembretes. Código: ${remindersResponse.statusCode}');
       }
 
+      print('Buscando tarefas para userId: ${widget.userId}');
       // Buscar tarefas
       final tasksResponse = await http.get(
         Uri.parse('http://192.168.56.1:8080/api/tarefas/${widget.userId}'),
       );
 
       if (tasksResponse.statusCode == 200) {
-        tasks = jsonDecode(tasksResponse.body);
+        setState(() {
+          tasks = jsonDecode(tasksResponse.body);
+        });
+        print('Tarefas buscadas com sucesso: $tasks');
       } else {
         print('Falha ao buscar tarefas. Código: ${tasksResponse.statusCode}');
       }
@@ -81,6 +89,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Future<void> deleteReminder(String reminderId) async {
     try {
+      print('Deletando lembrete com ID: $reminderId');
       final userId = widget.userId;
       final response = await http.delete(Uri.parse(
           'http://192.168.56.1:8080/api/lembretes/$userId/$reminderId'));
@@ -88,27 +97,31 @@ class _InicialMainPageState extends State<InicialMainPage> {
         setState(() {
           reminders.removeWhere((reminder) => reminder['id'] == reminderId);
         });
+        print('Lembrete deletado com sucesso');
       } else {
-        throw Exception('Failed to delete reminder');
+        print('Falha ao deletar lembrete. Código: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error deleting reminder: $e');
+      print('Erro ao deletar lembrete: $e');
     }
   }
 
   Future<void> deleteTask(String taskId) async {
     try {
-      final response = await http
-          .delete(Uri.parse('http://192.168.56.1:8080/api/tarefas/$taskId'));
+      print('Deletando tarefa com ID: $taskId');
+      final response = await http.delete(
+        Uri.parse('http://192.168.56.1:8080/api/tarefas/$taskId'),
+      );
       if (response.statusCode == 200) {
         setState(() {
           tasks.removeWhere((task) => task['id'] == taskId);
         });
+        print('Tarefa deletada com sucesso');
       } else {
-        throw Exception('Failed to delete task');
+        print('Falha ao deletar tarefa. Código: ${response.statusCode}');
       }
     } catch (e) {
-      print(e);
+      print('Erro ao deletar tarefa: $e');
     }
   }
 
@@ -131,6 +144,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
   }
 
   void applyFilters() {
+    print('Aplicando filtros...');
     // Implementação de filtros, incluindo lembretes e tarefas.
     List filteredReminders = reminders.where((reminder) {
       final matchesStartDate = startDate == null ||
@@ -158,6 +172,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
       reminders = List.from(filteredReminders);
       tasks = List.from(filteredTasks);
     });
+    print('Filtros aplicados. Lembretes: $reminders, Tarefas: $tasks');
   }
 
   @override

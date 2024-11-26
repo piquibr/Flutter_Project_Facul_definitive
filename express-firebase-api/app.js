@@ -86,6 +86,7 @@ app.post("/api/tarefas", async (req, res) => {
 });
 
 // Rota para listar as tarefas de um usuário
+// Rota para listar as tarefas de um usuário
 app.get("/api/tarefas/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -97,7 +98,7 @@ app.get("/api/tarefas/:userId", async (req, res) => {
     const tarefasSnapshot = await db.collection("tarefas").where("userId", "==", userId).get();
 
     if (tarefasSnapshot.empty) {
-      return res.status(404).json({ message: "Nenhuma tarefa encontrada para este usuário." });
+      return res.status(200).json([]); // Retorna uma lista vazia ao invés de erro 404
     }
 
     const tarefas = tarefasSnapshot.docs.map((doc) => {
@@ -105,7 +106,7 @@ app.get("/api/tarefas/:userId", async (req, res) => {
       return {
         id: doc.id,
         ...tarefaData,
-        horario: tarefaData.horario ? moment(tarefaData.horario.toDate()).format("DD/MM/YYYY HH:mm") : null, // Formata a data, se existir
+        horario: tarefaData.horario ? moment(tarefaData.horario.toDate()).format("DD/MM/YYYY HH:mm") : null,
       };
     });
 
@@ -115,7 +116,6 @@ app.get("/api/tarefas/:userId", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar tarefas." });
   }
 });
-
 
 // Rota para excluir uma tarefa
 app.delete("/api/tarefas/:id", async (req, res) => {
@@ -273,7 +273,7 @@ app.get("/api/lembretes/:userId", async (req, res) => {
     const lembretesSnapshot = await db.collection("lembretes").where("userId", "==", userId).get();
 
     if (lembretesSnapshot.empty) {
-      return res.status(404).json({ message: "Nenhum lembrete encontrado para este usuário." });
+      return res.status(200).json([]); // Retorna uma lista vazia ao invés de erro 404
     }
 
     // Mapeia os lembretes e retorna ao cliente
@@ -282,7 +282,7 @@ app.get("/api/lembretes/:userId", async (req, res) => {
       return {
         id: doc.id,
         ...lembreteData,
-        dataHora: lembreteData.dataHora ? moment(lembreteData.dataHora.toDate()).format("DD/MM/YYYY HH:mm") : null, // Formata a data, se existir
+        dataHora: lembreteData.dataHora ? moment(lembreteData.dataHora.toDate()).format("DD/MM/YYYY HH:mm") : null,
       };
     });
 
