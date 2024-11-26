@@ -131,6 +131,29 @@ app.delete("/api/tarefas/:id", async (req, res) => {
   }
 });
 
+// Rota para excluir uma tarefa
+app.delete("/api/tarefas/:userId/:id", async (req, res) => {
+  try {
+    const { userId, id } = req.params; // Obtém o userId e o id da tarefa
+
+    // Referência à tarefa no Firestore
+    const tarefaRef = db.collection("tarefas").doc(id);
+    const tarefa = await tarefaRef.get();
+
+    // Verifica se a tarefa existe e pertence ao usuário
+    if (!tarefa.exists || tarefa.data().userId !== userId) {
+      return res.status(404).json({ error: "Tarefa não encontrada ou usuário não autorizado!" });
+    }
+
+    // Exclui a tarefa
+    await tarefaRef.delete();
+    res.status(200).json({ message: "Tarefa excluída com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao excluir tarefa:", error);
+    res.status(500).json({ error: "Erro ao excluir tarefa." });
+  }
+});
+
 // Rota para editar uma tarefa
 // Rota para editar uma tarefa
 app.put("/api/tarefas/:id", async (req, res) => {
