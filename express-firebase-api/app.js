@@ -155,7 +155,6 @@ app.delete("/api/tarefas/:userId/:id", async (req, res) => {
 });
 
 // Rota para editar uma tarefa
-// Rota para editar uma tarefa
 app.put("/api/tarefas/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID da tarefa a ser atualizada
@@ -212,32 +211,39 @@ app.put("/api/tarefas/:id", async (req, res) => {
 // Rota para adicionar um lembrete ao Firestore (associado a um usuário)
 app.post("/api/lembretes", async (req, res) => {
   try {
-    const { userId, titulo, descricao, dataHora } = req.body;
+    const { userId, titulo, descricao, horario } = req.body;
 
-    // Verifica se todos os campos obrigatórios foram fornecidos
-    if (!userId || !titulo || !descricao || !dataHora) {
+    // Validação de entrada
+    if (!userId || !titulo || !descricao || !horario) {
       return res.status(400).json({ error: "Todos os campos são obrigatórios!" });
     }
 
-    // Formata a data e hora recebida
-    const formattedDataHora = moment(dataHora, "DD/MM/YYYY HH:mm").toDate();
+    // Converte a string de horário recebida no formato "DD/MM/YYYY HH:mm" para um objeto Date
+    const formattedHorario = moment(horario, "DD/MM/YYYY HH:mm").toDate();
+    if (!formattedHorario ||  isNaN(formattedHorario)) {
+      return res.status(400).json({ error: "O formato do horário é inválido." });
+    }
 
-    // Cria um novo lembrete no Firestore
-    const lembreteRef = db.collection("lembretes");
+    // Salva o lembrete no Firestore
+    const lembretesRef = db.collection("lembretes");
     const novoLembrete = {
       userId,
       titulo,
       descricao,
-      dataHora: formattedDataHora,
+      horario: admin.firestore.Timestamp.fromDate(formattedHorario), // Salva como Timestamp
     };
 
-    const docRef = await lembreteRef.add(novoLembrete);
-    res.status(201).json({ message: "Lembrete adicionado!", id: docRef.id });
+    const docRef = await lembretesRef.add(novoLembrete);
+
+    // Retorna sucesso com o ID do documento
+    res.status(201).json({ message: "Lembrete adicionado com sucesso!", id: docRef.id });
   } catch (error) {
-    console.error("Erro ao adicionar lembrete:", error);
-    res.status(500).json({ error: "Erro ao adicionar lembrete." });
+    console.error("Erro ao criar lembrete:", error);
+    res.status(500).json({ error: "Erro ao criar lembrete." });
   }
 });
+
+
 
 // Rota para editar um lembrete no Firestore (associado a um usuário)
 app.put("/api/lembretes/:userId/:id", async (req, res) => {
@@ -277,13 +283,13 @@ app.put("/api/lembretes/:userId/:id", async (req, res) => {
 // Rota para excluir um lembrete no Firestore (associado a um usuário)
 app.delete("/api/lembretes/:userId/:id", async (req, res) => {
   try {
-    const { userId, id } = req.params; // ID do lembrete a ser excluído e o ID do usuário
+    const { userId, id } = req.params; // Obtém o userId e o id da tarefa
 
-    // Referência ao lembrete no Firestore
+    // Referência o lembrete no Firestore
     const lembreteRef = db.collection("lembretes").doc(id);
     const lembrete = await lembreteRef.get();
 
-    // Verifica se o lembrete existe e se pertence ao usuário
+     // Verifica se o lembrete existe e se pertence ao usuário
     if (!lembrete.exists || lembrete.data().userId !== userId) {
       return res.status(404).json({ error: "Lembrete não encontrado ou usuário não autorizado!" });
     }
@@ -306,20 +312,18 @@ app.get("/api/lembretes/:userId", async (req, res) => {
       return res.status(400).json({ error: "O ID do usuário é obrigatório!" });
     }
 
-    // Consulta os lembretes do usuário no Firestore
     const lembretesSnapshot = await db.collection("lembretes").where("userId", "==", userId).get();
 
     if (lembretesSnapshot.empty) {
       return res.status(404).json({ message: "Nenhum lembrete encontrado para este usuário." });
     }
 
-    // Mapeia os lembretes e retorna ao cliente
     const lembretes = lembretesSnapshot.docs.map((doc) => {
       const lembreteData = doc.data();
       return {
         id: doc.id,
         ...lembreteData,
-        dataHora: moment(lembreteData.dataHora.toDate()).format("DD/MM/YYYY HH:mm"), // Formata a data
+        horario: moment(lembreteData.horario.toDate()).format("DD/MM/YYYY HH:mm"), // Formata a data
       };
     });
 
@@ -329,6 +333,7 @@ app.get("/api/lembretes/:userId", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar lembretes." });
   }
 });
+
 
 
 // Rota de autenticação (login)
