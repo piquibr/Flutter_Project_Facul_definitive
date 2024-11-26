@@ -124,7 +124,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Future<void> deleteReminder(String reminderId) async {
     try {
-      final url = Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId/$reminderId');
+      final url = Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId/$reminderId');
       final response = await http.delete(url);
 
       if (response.statusCode == 200) {
