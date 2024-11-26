@@ -7,6 +7,8 @@ import 'dart:convert';
 
 class InicialMain extends StatelessWidget {
   static String tag = 'inicialMain_page';
+  final String userId;
+  const InicialMain({required this.userId, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -15,12 +17,15 @@ class InicialMain extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: InicialMainPage(),
+      home: InicialMainPage(userId: userId),
     );
   }
 }
 
 class InicialMainPage extends StatefulWidget {
+  final String userId;
+  const InicialMainPage({required this.userId});
+
   @override
   _InicialMainPageState createState() => _InicialMainPageState();
 }
@@ -33,75 +38,52 @@ class _InicialMainPageState extends State<InicialMainPage> {
   String? searchText;
   List reminders = [];
   List tasks = [];
-  bool isLoading = false;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchReminders();
-    fetchTasks();
+    fetchData();
   }
 
-  Future<void> fetchReminders() async {
-    setState(() {
-      isLoading = true;
-    });
-
+  Future<void> fetchData() async {
     try {
-      final userId = 'BWOXEy1N5nnn886D8ziv';
-      final response = await http
-          .get(Uri.parse('http://localhost:8080/api/lembretes/$userId'));
-      if (response.statusCode == 200) {
-        setState(() {
-          reminders = json.decode(response.body);
-          isLoading = false;
-        });
+      // Buscar lembretes
+      final remindersResponse = await http.get(
+        Uri.parse('http://localhost:8080/api/lembretes/${widget.userId}'),
+      );
+
+      if (remindersResponse.statusCode == 200) {
+        reminders = jsonDecode(remindersResponse.body);
       } else {
-        setState(() {
-          isLoading = false;
-        });
-        throw Exception('Failed to load reminders');
+        print(
+            'Falha ao buscar lembretes. Código: ${remindersResponse.statusCode}');
+      }
+
+      // Buscar tarefas
+      final tasksResponse = await http.get(
+        Uri.parse('http://localhost:8080/api/tarefas/${widget.userId}'),
+      );
+
+      if (tasksResponse.statusCode == 200) {
+        tasks = jsonDecode(tasksResponse.body);
+      } else {
+        print('Falha ao buscar tarefas. Código: ${tasksResponse.statusCode}');
       }
     } catch (e) {
+      print('Erro ao buscar dados: $e');
+    } finally {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching reminders: $e');
-    }
-  }
-
-  Future<void> fetchTasks() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final userId = 'BWOXEy1N5nnn886D8ziv';
-      final response = await http
-          .get(Uri.parse('http://localhost:8080/api/tarefas/$userId'));
-      if (response.statusCode == 200) {
-        setState(() {
-          tasks = json.decode(response.body);
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        throw Exception('Failed to load tasks');
-      }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      print('Error fetching tasks: $e');
     }
   }
 
   Future<void> deleteReminder(String reminderId) async {
     try {
-      final response = await http.delete(Uri.parse(
-          'http://localhost:8080/api/lembretes/BWOXEy1N5nnn886D8ziv/$reminderId'));
+      final userId = widget.userId;
+      final response = await http.delete(
+          Uri.parse('http://localhost:8080/api/lembretes/$userId/$reminderId'));
       if (response.statusCode == 200) {
         setState(() {
           reminders.removeWhere((reminder) => reminder['id'] == reminderId);

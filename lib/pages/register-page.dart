@@ -10,7 +10,7 @@ import 'dart:convert';
 
 Future<void> _cadastrarUsuario(BuildContext context, String email, String senha,
     String telefone, String nome) async {
-  const String apiUrl = "http://localhost:8080/api/addTest";
+  const String apiUrl = "http://localhost:8080/api/addUser";
 
   try {
     final response = await http.post(

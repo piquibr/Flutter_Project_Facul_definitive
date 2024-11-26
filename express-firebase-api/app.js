@@ -32,17 +32,23 @@ app.post("/api/addUser", async (req, res) => {
     // Hashear a senha
     const senhaHash = await bcrypt.hash(senha, 10);
 
-    // Adicionar usuário com senha hasheada
+    // Adicionar usuário com senha hasheada e gerar um ID único
     const docRef = await db.collection("usuarios").add({
       email,
       senha: senhaHash, // Salva a senha como hash
       telefone,
       nome,
+      userId: "" // Inicialmente vazio, será atualizado em seguida
     });
 
+    // Atualizar o documento com o userId gerado pelo Firestore
+    const userId = docRef.id;
+    await docRef.update({ userId });
+
+    // Retornar a resposta com o userId
     res.status(201).send({
       message: "Usuário cadastrado com sucesso!",
-      id: docRef.id,
+      id: userId,
     });
   } catch (error) {
     console.error("Erro ao salvar no Firestore:", error);
@@ -99,7 +105,7 @@ app.get("/api/tarefas/:userId", async (req, res) => {
       return {
         id: doc.id,
         ...tarefaData,
-        horario: moment(tarefaData.horario.toDate()).format("DD/MM/YYYY HH:mm"), // Formata a data
+        horario: tarefaData.horario ? moment(tarefaData.horario.toDate()).format("DD/MM/YYYY HH:mm") : null, // Formata a data, se existir
       };
     });
 
@@ -109,6 +115,7 @@ app.get("/api/tarefas/:userId", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar tarefas." });
   }
 });
+
 
 // Rota para excluir uma tarefa
 app.delete("/api/tarefas/:id", async (req, res) => {
@@ -275,7 +282,7 @@ app.get("/api/lembretes/:userId", async (req, res) => {
       return {
         id: doc.id,
         ...lembreteData,
-        dataHora: moment(lembreteData.dataHora.toDate()).format("DD/MM/YYYY HH:mm"), // Formata a data
+        dataHora: lembreteData.dataHora ? moment(lembreteData.dataHora.toDate()).format("DD/MM/YYYY HH:mm") : null, // Formata a data, se existir
       };
     });
 

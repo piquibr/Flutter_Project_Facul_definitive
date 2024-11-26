@@ -8,14 +8,14 @@ import 'pages/register-page.dart';
 import 'pages/recoveryPassword-page.dart';
 
 class MyHomePage extends StatefulWidget {
-  static String tag = 'MyHomePage(title: title)';
+  static String tag = 'my_home_page';
   const MyHomePage({super.key});
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   final _formKey = GlobalKey<FormState>();
 
   // Controladores de texto
@@ -68,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
 class LogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Image.asset('./lib/assets/iconLogin.png', height: 100);
+    return Image.asset('lib/assets/iconLogin.png', height: 100);
   }
 }
 
@@ -151,8 +151,10 @@ class LoginButton extends StatelessWidget {
     final senha = passwordController.text.trim();
 
     try {
+      print('Attempting login with email: $email');
       final response = await http.post(
-        Uri.parse('http://localhost:8080/login'), // Substitua pela URL da API
+        Uri.parse(
+            'http://localhost:8080/login'), // URL ajustada para funcionar no emulador Android
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'senha': senha}),
       );
@@ -160,23 +162,34 @@ class LoginButton extends StatelessWidget {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['token']; // Supondo que a API retorna um token
+        final userId = (data['id'] ?? 'default_user_id')
+            .toString(); // Garante que userId não seja nulo
 
-        // Exemplo: Armazenar token usando shared_preferences
-        // final prefs = await SharedPreferences.getInstance();
-        // await prefs.setString('token', token);
+        if (userId == 'default_user_id') {
+          // Caso o userId não esteja presente, exibir uma mensagem de erro
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Erro ao obter ID do usuário. Tente novamente.')),
+          );
+          return;
+        }
+
+        print('Login successful. Token: $token, User ID: $userId');
 
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => InicialMain()),
+          MaterialPageRoute(builder: (context) => InicialMain(userId: userId)),
         );
       } else {
         final error = jsonDecode(response.body)['error'];
+        print('Login failed. Error: $error');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro: $error')),
         );
       }
     } catch (e) {
       log("Erro durante o login: $e");
+      print('Error during login: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erro ao se conectar à API')),
       );
