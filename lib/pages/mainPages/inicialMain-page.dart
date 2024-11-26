@@ -198,6 +198,23 @@ class _InicialMainPageState extends State<InicialMainPage> {
     });
   }
 
+  Future<void> _navigateToEditTask(Map<String, dynamic> task) async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => CreateEditTaskScreen(
+        userId: userId,
+        task: task,
+      ),
+    ),
+  );
+
+  if (result == true) {
+    // Recarregar os dados
+    fetchTasks();
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -480,24 +497,27 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 ),
                 PopupMenuButton<String>(
                   icon: Icon(Icons.more_vert, color: Colors.black),
-                  onSelected: (value) {
+                  onSelected: (value) async {
                     if (value == 'edit') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CreateEditTaskScreen(
-                          userId: userId, // Passa o userId
-                          task: task, // Passa a tarefa a ser editada
+                      final updated = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CreateEditTaskScreen(
+                            userId: userId, // Passa o userId
+                            task: task, // Passa a tarefa a ser editada
+                          ),
                         ),
-                      ),
-                    );
-                      // Ação de edição para tarefa
+                      );
+
+                      if (updated == true) {
+                        // Recarregar as tarefas após a edição bem-sucedida
+                        fetchTasks();
+                      }
                     } else if (value == 'delete') {
                       deleteTask(task['id']);
                     }
                   },
-                  itemBuilder: (BuildContext context) =>
-                      <PopupMenuEntry<String>>[
+                  itemBuilder: (BuildContext context) => [
                     const PopupMenuItem<String>(
                       value: 'edit',
                       child: Text('Editar'),

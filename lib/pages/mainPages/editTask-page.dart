@@ -161,54 +161,52 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
     print('Tarefa recebida: ${widget.task}');
   }
 
-  Future<void> _saveTask() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+Future<void> _saveTask() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    _formKey.currentState?.save();
 
-      final horario = DateTime(
-        _dataLimite.year,
-        _dataLimite.month,
-        _dataLimite.day,
-        _horaLimite.hour,
-        _horaLimite.minute,
-      );
+    final horario = DateTime(
+      _dataLimite.year,
+      _dataLimite.month,
+      _dataLimite.day,
+      _horaLimite.hour,
+      _horaLimite.minute,
+    );
 
-      final formattedHorario = DateFormat("dd/MM/yyyy HH:mm").format(horario);
+    final formattedHorario = DateFormat("dd/MM/yyyy HH:mm").format(horario);
 
-      try {
-        if (widget.task == null) {
-          // Criar nova tarefa
-          await ApiService.createTask(
-            userId: widget.userId,
-            titulo: _titulo,
-            descricao: _descricao,
-            horario: formattedHorario,
-            status: _status,
-            categoria: _categoria,
-          );
-          print('Nova tarefa criada com sucesso');
-        } else {
-          // Atualizar tarefa existente
-          await ApiService.updateTask(
-            taskId: widget.task!['id'],
-            titulo: _titulo,
-            descricao: _descricao,
-            horario: formattedHorario,
-            status: _status,
-            categoria: _categoria,
-          );
-          print('Tarefa atualizada com sucesso');
-        }
-
-        Navigator.pop(context); // Voltar à página anterior
-      } catch (e) {
-        print('Erro ao salvar tarefa: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar tarefa! Tente novamente.')),
+    try {
+      if (widget.task == null) {
+        await ApiService.createTask(
+          userId: widget.userId,
+          titulo: _titulo,
+          descricao: _descricao,
+          horario: formattedHorario,
+          status: _status,
+          categoria: _categoria,
         );
+        print('Nova tarefa criada com sucesso');
+      } else {
+        await ApiService.updateTask(
+          taskId: widget.task!['id'],
+          titulo: _titulo,
+          descricao: _descricao,
+          horario: formattedHorario,
+          status: _status,
+          categoria: _categoria,
+        );
+        print('Tarefa atualizada com sucesso');
       }
+
+      Navigator.pop(context, true); // Retorna um indicador de sucesso
+    } catch (e) {
+      print('Erro ao salvar tarefa: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar tarefa! Tente novamente.')),
+      );
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
