@@ -139,17 +139,20 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Future<void> deleteTask(String taskId) async {
     try {
-      final response = await http.delete(
-          Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId/$taskId'));
+      final url = Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId/$taskId');
+      final response = await http.delete(url);
+
       if (response.statusCode == 200) {
         setState(() {
-          tasks.removeWhere((task) => task['id'] == taskId);
+          tasks.removeWhere(
+              (task) => task['id'] == taskId); // Remove da lista localmente
         });
+        print('Tarefa excluída com sucesso');
       } else {
-        throw Exception('Failed to delete task');
+        throw Exception('Erro ao excluir tarefa: ${response.body}');
       }
     } catch (e) {
-      print(e);
+      print('Erro ao excluir tarefa: $e');
     }
   }
 
@@ -511,16 +514,18 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 Text(
                   'Status: ${task['status']}',
                   style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                      fontStyle: FontStyle.italic),
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
                 Text(
                   'Categoria: ${task['categoria']}',
                   style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                      fontStyle: FontStyle.italic),
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
                 PopupMenuButton<String>(
                   icon: Icon(Icons.more_vert, color: Colors.black),
@@ -530,18 +535,55 @@ class _InicialMainPageState extends State<InicialMainPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => CreateEditTaskScreen(
-                            userId: userId, // Passa o userId
-                            task: task, // Passa a tarefa a ser editada
+                            userId: userId,
+                            task: task,
                           ),
                         ),
                       );
 
                       if (updated == true) {
-                        // Recarregar as tarefas após a edição bem-sucedida
-                        fetchTasks();
+                        fetchTasks(); // Atualiza a lista após edição
                       }
                     } else if (value == 'delete') {
-                      deleteTask(task['id']);
+                      final shouldDelete = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text('Confirmar Exclusão'),
+                            content: Text(
+                                'Tem certeza de que deseja excluir esta tarefa?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, false), // Cancela
+                                child: Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, true), // Confirma
+                                child: Text('Excluir'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (shouldDelete == true) {
+                        try {
+                          await deleteTask(task['id'].toString());
+                          fetchTasks(); // Recarrega a lista de tarefas
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Tarefa excluída com sucesso!')),
+                          );
+                        } catch (e) {
+                          print('Erro ao excluir tarefa: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Erro ao excluir a tarefa!')),
+                          );
+                        }
+                      }
                     }
                   },
                   itemBuilder: (BuildContext context) => [
