@@ -17,17 +17,22 @@ class InicialMain extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: InicialMainPage(),
+      home: InicialMainPage(userId: userId),
     );
   }
 }
 
 class InicialMainPage extends StatefulWidget {
+  final String userId;
+
+  const InicialMainPage({required this.userId, Key? key}) : super(key: key);
   @override
   _InicialMainPageState createState() => _InicialMainPageState();
 }
 
 class _InicialMainPageState extends State<InicialMainPage> {
+  late String userId = widget.userId
+      .toString(); // Agora será inicializado com o valor passado pelo widget
   DateTime? startDate;
   DateTime? endDate;
   String? selectedType;
@@ -40,6 +45,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
   @override
   void initState() {
     super.initState();
+    userId =
+        widget.userId.toString(); // Inicializa o userId com o valor recebido
     fetchReminders();
     fetchTasks();
   }
@@ -49,15 +56,22 @@ class _InicialMainPageState extends State<InicialMainPage> {
       isLoading = true;
     });
 
+    print("Fetching reminders for userId: $userId"); // Adicionado debug
     try {
-      final userId = 'BWOXEy1N5nnn886D8ziv';
       final response = await http
           .get(Uri.parse('http://localhost:8080/api/lembretes/$userId'));
+      print(
+          "Response status for reminders: ${response.statusCode}"); // Status do HTTP
+      print(
+          "Response body for reminders: ${response.body}"); // Corpo da resposta
+
       if (response.statusCode == 200) {
         setState(() {
           reminders = json.decode(response.body);
           isLoading = false;
         });
+        print(
+            "Reminders loaded successfully: $reminders"); // Confirmação do carregamento
       } else {
         setState(() {
           isLoading = false;
@@ -68,7 +82,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching reminders: $e');
+      print('Error fetching reminders: $e'); // Exibe erros
     }
   }
 
@@ -77,15 +91,20 @@ class _InicialMainPageState extends State<InicialMainPage> {
       isLoading = true;
     });
 
+    print("Fetching tasks for userId: $userId"); // Debug
     try {
-      final userId = 'BWOXEy1N5nnn886D8ziv';
       final response = await http
           .get(Uri.parse('http://localhost:8080/api/tarefas/$userId'));
+      print(
+          "Response status for tasks: ${response.statusCode}"); // Debug do status
+      print("Response body for tasks: ${response.body}"); // Debug do corpo
+
       if (response.statusCode == 200) {
         setState(() {
           tasks = json.decode(response.body);
           isLoading = false;
         });
+        print("Tasks loaded successfully: $tasks"); // Confirmação de sucesso
       } else {
         setState(() {
           isLoading = false;
@@ -96,14 +115,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching tasks: $e');
+      print('Error fetching tasks: $e'); // Debug de erros
     }
   }
 
   Future<void> deleteReminder(String reminderId) async {
     try {
-      final response = await http.delete(Uri.parse(
-          'http://localhost:8080/api/lembretes/BWOXEy1N5nnn886D8ziv/$reminderId'));
+      final response = await http.delete(
+          Uri.parse('http://localhost:8080/api/lembretes/$userId/$reminderId'));
       if (response.statusCode == 200) {
         setState(() {
           reminders.removeWhere((reminder) => reminder['id'] == reminderId);
@@ -118,8 +137,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Future<void> deleteTask(String taskId) async {
     try {
-      final response = await http
-          .delete(Uri.parse('http://localhost:8080/api/tarefas/$taskId'));
+      final response = await http.delete(
+          Uri.parse('http://localhost:8080/api/tarefas/$userId/$taskId'));
       if (response.statusCode == 200) {
         setState(() {
           tasks.removeWhere((task) => task['id'] == taskId);
