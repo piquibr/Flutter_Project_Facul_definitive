@@ -371,7 +371,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CreateReminderScreen(),
+                            builder: (context) => CreateReminderScreen(userId: userId),
                           ),
                         );
                       },
