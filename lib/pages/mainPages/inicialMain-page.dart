@@ -232,6 +232,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 onChanged: (value) {
                   setState(() {
                     searchText = value;
+                    applyFilters();
                   });
                 },
                 decoration: InputDecoration(
