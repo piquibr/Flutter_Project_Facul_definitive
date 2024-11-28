@@ -3,9 +3,29 @@ const express = require("express");
 const admin = require("firebase-admin");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const moment = require("moment"); // Adicionando moment.js para formatação de datas
+
+// EMAIL with Nodemailer
+const nodemailer = require('nodemailer');
+const { v4: uuidv4 } = require('uuid');
+
+// Configuração do Nodemailer
+const transporter = nodemailer.createTransport({
+  // host: 'smtp.office365.com',
+  host: 'smtp.gmail.com',
+  port: 465,
+  //port: 587,
+  service: 'gmail',
+  secure: true, // Use STARTTLS
+  auth: {
+      user: 'terrordoflutter@gmail.com',
+      // pass: 'pcmsqyebjrleeeyem'  // Ou senha comum se "apps menos seguros" estiver ativado
+      pass: 'ysqmpxesktjexyem'
+  },
+});
 
 // Inicialize o Firebase Admin com a chave privada
 const serviceAccount = require("./google-services.json");
@@ -90,6 +110,55 @@ app.put("/api/updatePassword", async (req, res) => {
     return res.status(500).send({ error: "Erro interno no servidor." });
   }
 });
+
+// Rota para enviar uma senha temporária
+app.post("/api/sendTemporaryPassword", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email é obrigatório!" });
+  }
+
+  try {
+    // Verifica se o e-mail existe no banco de dados
+    const userSnapshot = await db
+      .collection("usuarios")
+      .where("email", "==", email)
+      .get();
+
+    if (userSnapshot.empty) {
+      return res.status(404).json({ error: "Usuário não encontrado!" });
+    }
+
+    const userDoc = userSnapshot.docs[0];
+    const userId = userDoc.id;
+
+    // Gera uma senha temporária
+    const tempPassword = crypto.randomBytes(6).toString("hex"); // Exemplo: "3f7e2a"
+    const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
+
+    // Atualiza a senha temporária no banco
+    await db.collection("usuarios").doc(userId).update({
+      senha: tempPasswordHash,
+    });
+
+    // Envia o e-mail com a senha temporária
+    const mailOptions = {
+      from: "terrordoflutter@gmail.com",
+      to: email,
+      subject: "Sua senha temporária",
+      text: `Olá, sua senha temporária é: ${tempPassword}. Use-a para acessar sua conta e redefinir sua senha.`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Senha temporária enviada por e-mail!" });
+  } catch (error) {
+    console.error("Erro ao enviar senha temporária:", error);
+    res.status(500).json({ error: "Erro ao enviar senha temporária." });
+  }
+});
+
 
 
 
