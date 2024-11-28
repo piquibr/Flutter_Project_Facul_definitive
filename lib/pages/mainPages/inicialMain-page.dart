@@ -6,6 +6,7 @@ import 'package:flutter_project_todo_list/pages/mainPages/editReminder-page.dart
 import 'package:flutter_project_todo_list/pages/mainPages/editTask-page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class InicialMain extends StatelessWidget {
   static String tag = 'inicialMain_page';
@@ -18,7 +19,13 @@ class InicialMain extends StatelessWidget {
       title: 'Notas',
       theme: ThemeData(
         primarySwatch: Colors.orange,
+        brightness: Brightness.light,
       ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.grey,
+        brightness: Brightness.dark,
+      ),
+      themeMode: ThemeMode.light, // Define o tema inicial como claro
       home: InicialMainPage(userId: userId),
     );
   }
@@ -33,23 +40,21 @@ class InicialMainPage extends StatefulWidget {
 }
 
 class _InicialMainPageState extends State<InicialMainPage> {
-  late String userId = widget.userId
-      .toString(); // Agora será inicializado com o valor passado pelo widget
+  late String userId = widget.userId;
 
   DateTime? startDate;
   DateTime? endDate;
-  String? selectedType;
-  String? selectedCategory;
   String? searchText;
   List reminders = [];
+  List filteredRemindersDisplay = [];
   List tasks = [];
+  List filteredTasksDisplay = [];
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    userId =
-        widget.userId.toString(); // Inicializa o userId com o valor recebido
+    userId = widget.userId;
     fetchReminders();
     fetchTasks();
   }
@@ -59,22 +64,15 @@ class _InicialMainPageState extends State<InicialMainPage> {
       isLoading = true;
     });
 
-    print("Fetching reminders for userId: $userId"); // Adicionado debug
     try {
-      final response = await http
-          .get(Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId'));
-      print(
-          "Response status for reminders: ${response.statusCode}"); // Status do HTTP
-      print(
-          "Response body for reminders: ${response.body}"); // Corpo da resposta
+      final response = await http.get(Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId'));
 
       if (response.statusCode == 200) {
         setState(() {
           reminders = json.decode(response.body);
+          filteredRemindersDisplay = List.from(reminders);
           isLoading = false;
         });
-        print(
-            "Reminders loaded successfully: $reminders"); // Confirmação do carregamento
       } else {
         setState(() {
           isLoading = false;
@@ -85,7 +83,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching reminders: $e'); // Exibe erros
+      print('Error fetching reminders: $e');
     }
   }
 
@@ -94,20 +92,15 @@ class _InicialMainPageState extends State<InicialMainPage> {
       isLoading = true;
     });
 
-    print("Fetching tasks for userId: $userId"); // Debug
     try {
-      final response =
-          await http.get(Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId'));
-      print(
-          "Response status for tasks: ${response.statusCode}"); // Debug do status
-      print("Response body for tasks: ${response.body}"); // Debug do corpo
+      final response = await http.get(Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId'));
 
       if (response.statusCode == 200) {
         setState(() {
           tasks = json.decode(response.body);
+          filteredTasksDisplay = List.from(tasks);
           isLoading = false;
         });
-        print("Tasks loaded successfully: $tasks"); // Confirmação de sucesso
       } else {
         setState(() {
           isLoading = false;
@@ -118,7 +111,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching tasks: $e'); // Debug de erros
+      print('Error fetching tasks: $e');
     }
   }
 
@@ -129,8 +122,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
       if (response.statusCode == 200) {
         setState(() {
-          reminders.removeWhere((reminder) =>
-              reminder['id'] == reminderId); // Remove da lista localmente
+          reminders.removeWhere((reminder) => reminder['id'] == reminderId);
         });
         print('Lembrete excluído com sucesso');
       } else {
@@ -148,8 +140,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
       if (response.statusCode == 200) {
         setState(() {
-          tasks.removeWhere(
-              (task) => task['id'] == taskId); // Remove da lista localmente
+          tasks.removeWhere((task) => task['id'] == taskId);
         });
         print('Tarefa excluída com sucesso');
       } else {
@@ -179,90 +170,41 @@ class _InicialMainPageState extends State<InicialMainPage> {
   }
 
   void applyFilters() {
-    List filteredReminders = reminders.where((reminder) {
-      final matchesStartDate = startDate == null ||
-          DateTime.parse(reminder['dataHora']).isAfter(startDate!);
-      final matchesEndDate = endDate == null ||
-          DateTime.parse(reminder['dataHora']).isBefore(endDate!);
+    final List filteredReminders = reminders.where((reminder) {
+      final matchesStartDate = startDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(reminder['horario']).isAfter(startDate!) || DateFormat('dd/MM/yyyy HH:mm').parse(reminder['horario']).isAtSameMomentAs(startDate!);
+      final matchesEndDate = endDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(reminder['horario']).isBefore(endDate!.add(Duration(days: 1)));
       final matchesSearchText = searchText == null ||
-          reminder['titulo'].toLowerCase().contains(searchText!.toLowerCase());
+          reminder['titulo'].toLowerCase().contains(searchText!.toLowerCase()) ||
+          reminder['descricao'].toLowerCase().contains(searchText!.toLowerCase());
 
       return matchesStartDate && matchesEndDate && matchesSearchText;
     }).toList();
 
-    List filteredTasks = tasks.where((task) {
-      final matchesStartDate = startDate == null ||
-          DateTime.parse(task['horario']).isAfter(startDate!);
-      final matchesEndDate =
-          endDate == null || DateTime.parse(task['horario']).isBefore(endDate!);
+    final List filteredTasks = tasks.where((task) {
+      final matchesStartDate = startDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(task['horario']).isAfter(startDate!) || DateFormat('dd/MM/yyyy HH:mm').parse(task['horario']).isAtSameMomentAs(startDate!);
+      final matchesEndDate = endDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(task['horario']).isBefore(endDate!.add(Duration(days: 1)));
       final matchesSearchText = searchText == null ||
-          task['titulo'].toLowerCase().contains(searchText!.toLowerCase());
+          task['titulo'].toLowerCase().contains(searchText!.toLowerCase()) ||
+          task['descricao'].toLowerCase().contains(searchText!.toLowerCase());
 
       return matchesStartDate && matchesEndDate && matchesSearchText;
     }).toList();
 
     setState(() {
-      reminders = List.from(filteredReminders);
-      tasks = List.from(filteredTasks);
+      filteredRemindersDisplay = List.from(filteredReminders);
+      filteredTasksDisplay = List.from(filteredTasks);
     });
-  }
-
-  Future<void> _navigateToEditTask(Map<String, dynamic> task) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CreateEditTaskScreen(
-          userId: userId,
-          task: task,
-        ),
-      ),
-    );
-
-    if (result == true) {
-      // Recarregar os dados
-      fetchTasks();
-    }
-  }
-
-  Future<void> _navigateToCreateTask() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Createtask(userId: userId), // Passe o userId
-      ),
-    );
-
-    if (result == true) {
-      // Recarregar as tarefas após criar uma nova
-      fetchTasks();
-    }
-  }
-
-  // Criar lembrete
-
-  Future<void> _navigateToCreateReminder() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CreateReminder(userId: userId), // Passe o userId
-      ),
-    );
-
-    if (result == true) {
-      // Recarregar as tarefas após criar uma nova
-      fetchReminders();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notas', style: TextStyle(color: Colors.white)),
+        title: const Text('Notas', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
-          icon: Icon(Icons.density_medium_sharp, color: Colors.white),
+          icon: const Icon(Icons.density_medium_sharp, color: Colors.white),
           onPressed: () {
             Navigator.push(
               context,
@@ -272,7 +214,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.brightness_high),
+            icon: const Icon(Icons.brightness_high),
             onPressed: () {},
           ),
         ],
@@ -283,7 +225,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Color.fromARGB(10, 255, 101, 14),
+                color: const Color.fromARGB(10, 255, 101, 14),
                 borderRadius: BorderRadius.circular(25.0),
               ),
               child: TextField(
@@ -294,7 +236,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 },
                 decoration: InputDecoration(
                   hintText: 'Pesquisar...',
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25.0),
                     borderSide: BorderSide.none,
@@ -304,67 +246,82 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 ),
               ),
             ),
-            SizedBox(height: 8.0),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                icon: Icon(Icons.filter_alt, color: Colors.orange),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('Filtrar Notas'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              title: Text(
-                                  'Data Início: ${startDate != null ? startDate!.toLocal().toString().split(' ')[0] : 'Selecionar'}'),
-                              trailing: Icon(Icons.calendar_today),
-                              onTap: () => _selectDate(context, true),
+            const SizedBox(height: 8.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.filter_alt, color: Colors.orange),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Filtrar Notas'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                title: Text(
+                                    'Data Início: ${startDate != null ? DateFormat('dd/MM/yyyy').format(startDate!) : 'Selecionar'}'),
+                                trailing: const Icon(Icons.calendar_today),
+                                onTap: () => _selectDate(context, true),
+                              ),
+                              ListTile(
+                                title: Text(
+                                    'Data Fim: ${endDate != null ? DateFormat('dd/MM/yyyy').format(endDate!) : 'Selecionar'}'),
+                                trailing: const Icon(Icons.calendar_today),
+                                onTap: () => _selectDate(context, false),
+                              ),
+                            ],
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Cancelar'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
                             ),
-                            ListTile(
-                              title: Text(
-                                  'Data Fim: ${endDate != null ? endDate!.toLocal().toString().split(' ')[0] : 'Selecionar'}'),
-                              trailing: Icon(Icons.calendar_today),
-                              onTap: () => _selectDate(context, false),
+                            TextButton(
+                              child: const Text('Aplicar'),
+                              onPressed: () {
+                                applyFilters();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('Limpar Config. Filtro'),
+                              onPressed: () {
+                                setState(() {
+                                  startDate = null;
+                                  endDate = null;
+                                  searchText = null;
+                                  filteredRemindersDisplay = List.from(reminders);
+                                  filteredTasksDisplay = List.from(tasks);
+                                });
+                                Navigator.of(context).pop();
+                              },
                             ),
                           ],
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                            child: Text('Cancelar'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          TextButton(
-                            child: Text('Aplicar'),
-                            onPressed: () {
-                              applyFilters();
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
-            SizedBox(height: 12.0),
+            const SizedBox(height: 12.0),
             Expanded(
               child: isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                      itemCount: reminders.length + tasks.length,
+                      itemCount: filteredRemindersDisplay.length + filteredTasksDisplay.length,
                       itemBuilder: (context, index) {
-                        if (index < reminders.length) {
-                          final reminder = reminders[index];
+                        if (index < filteredRemindersDisplay.length) {
+                          final reminder = filteredRemindersDisplay[index];
                           return _buildReminderCard(reminder);
                         } else {
-                          final task = tasks[index - reminders.length];
+                          final task = filteredTasksDisplay[index - filteredRemindersDisplay.length];
                           return _buildTaskCard(task);
                         }
                       },
@@ -385,42 +342,35 @@ class _InicialMainPageState extends State<InicialMainPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ListTile(
-                      leading: Icon(Icons.note_add),
-                      title: Text('Criar Lembretes'),
+                      leading: const Icon(Icons.note_add),
+                      title: const Text('Criar Lembretes'),
                       onTap: () async {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                CreateReminderScreen(userId: userId),
+                            builder: (context) => CreateReminderScreen(userId: userId),
                           ),
                         );
-                        // Fecha o modal bottom sheet
                         Navigator.pop(context);
 
                         if (result == true) {
-                          // Recarrega a lista de tarefas após criar uma nova
                           fetchReminders();
                         }
                       },
                     ),
                     ListTile(
-                      leading: Icon(Icons.task_alt),
-                      title: Text('Criar Tarefas'),
+                      leading: const Icon(Icons.task_alt),
+                      title: const Text('Criar Tarefas'),
                       onTap: () async {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                CreatetaskScreen(userId: userId),
+                            builder: (context) => CreatetaskScreen(userId: userId),
                           ),
                         );
-
-                        // Fecha o modal bottom sheet
                         Navigator.pop(context);
 
                         if (result == true) {
-                          // Recarrega a lista de tarefas após criar uma nova
                           fetchTasks();
                         }
                       },
@@ -431,7 +381,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
             },
           );
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -453,7 +403,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 Expanded(
                   child: Text(
                     reminder['titulo'],
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                       color: Colors.black,
@@ -461,54 +411,49 @@ class _InicialMainPageState extends State<InicialMainPage> {
                   ),
                 ),
                 Text(
-                  '${reminder['horario']}',
-                  style: TextStyle(color: Colors.black),
+                  reminder['horario'],
+                  style: const TextStyle(color: Colors.black),
                 ),
               ],
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               reminder['descricao'],
-              style: TextStyle(color: Colors.black),
+              style: const TextStyle(color: Colors.black),
             ),
-            SizedBox(height: 2),
+            const SizedBox(height: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.black),
+                  icon: const Icon(Icons.more_vert, color: Colors.black),
                   onSelected: (value) async {
                     if (value == 'edit') {
                       final updated = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => 
-                          CreateEditReminderScreen(reminder: reminder, userId: userId)
-                          ,
+                          builder: (context) => CreateEditReminderScreen(reminder: reminder, userId: userId),
                         ),
                       );
 
                       if (updated == true) {
-                        fetchReminders(); // Atualiza a lista após edição
+                        fetchReminders();
                       }
                     } else if (value == 'delete') {
                       final shouldDelete = await showDialog<bool>(
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: Text('Confirmar Exclusão'),
-                            content: Text(
-                                'Tem certeza de que deseja excluir este lembrete?'),
+                            title: const Text('Confirmar Exclusão'),
+                            content: const Text('Tem certeza de que deseja excluir este lembrete?'),
                             actions: [
                               TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false), // Cancela
-                                child: Text('Cancelar'),
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
                               ),
                               TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, true), // Confirma
-                                child: Text('Excluir'),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Excluir'),
                               ),
                             ],
                           );
@@ -518,16 +463,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
                       if (shouldDelete == true) {
                         try {
                           await deleteReminder(reminder['id'].toString());
-                          fetchReminders(); // Recarrega a lista de tarefas
+                          fetchReminders();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Lembrete excluído com sucesso!')),
+                            const SnackBar(content: Text('Lembrete excluído com sucesso!')),
                           );
                         } catch (e) {
                           print('Erro ao excluir Lembrete: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Erro ao excluir o lembrete!')),
+                            const SnackBar(content: Text('Erro ao excluir o lembrete!')),
                           );
                         }
                       }
@@ -569,7 +512,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 Expanded(
                   child: Text(
                     task['titulo'],
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                       color: Colors.black,
@@ -577,23 +520,23 @@ class _InicialMainPageState extends State<InicialMainPage> {
                   ),
                 ),
                 Text(
-                  '${task['horario']}',
-                  style: TextStyle(color: Colors.black),
+                  task['horario'],
+                  style: const TextStyle(color: Colors.black),
                 ),
               ],
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               task['descricao'],
-              style: TextStyle(color: Colors.black),
+              style: const TextStyle(color: Colors.black),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Status: ${task['status']}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w600,
                     fontStyle: FontStyle.italic,
@@ -601,14 +544,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 ),
                 Text(
                   'Categoria: ${task['categoria']}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w600,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.black),
+                  icon: const Icon(Icons.more_vert, color: Colors.black),
                   onSelected: (value) async {
                     if (value == 'edit') {
                       final updated = await Navigator.push(
@@ -622,26 +565,23 @@ class _InicialMainPageState extends State<InicialMainPage> {
                       );
 
                       if (updated == true) {
-                        fetchTasks(); // Atualiza a lista após edição
+                        fetchTasks();
                       }
                     } else if (value == 'delete') {
                       final shouldDelete = await showDialog<bool>(
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: Text('Confirmar Exclusão'),
-                            content: Text(
-                                'Tem certeza de que deseja excluir esta tarefa?'),
+                            title: const Text('Confirmar Exclusão'),
+                            content: const Text('Tem certeza de que deseja excluir esta tarefa?'),
                             actions: [
                               TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false), // Cancela
-                                child: Text('Cancelar'),
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
                               ),
                               TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, true), // Confirma
-                                child: Text('Excluir'),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Excluir'),
                               ),
                             ],
                           );
@@ -651,16 +591,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
                       if (shouldDelete == true) {
                         try {
                           await deleteTask(task['id'].toString());
-                          fetchTasks(); // Recarrega a lista de tarefas
+                          fetchTasks();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Tarefa excluída com sucesso!')),
+                            const SnackBar(content: Text('Tarefa excluída com sucesso!')),
                           );
                         } catch (e) {
                           print('Erro ao excluir tarefa: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Erro ao excluir a tarefa!')),
+                            const SnackBar(content: Text('Erro ao excluir a tarefa!')),
                           );
                         }
                       }
