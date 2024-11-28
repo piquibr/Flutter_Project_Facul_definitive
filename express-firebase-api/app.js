@@ -50,6 +50,50 @@ app.post("/api/addUser", async (req, res) => {
   }
 });
 
+app.put("/api/updatePassword", async (req, res) => {
+  const { userId, senhaAtual, novaSenha } = req.body;
+
+  // Validação de dados
+  if (!userId || !senhaAtual || !novaSenha) {
+    return res.status(400).send({ error: "Dados incompletos!" });
+  }
+
+  try {
+    // Buscar o usuário pelo userId
+    const userDoc = await db.collection("usuarios").doc(userId).get();
+
+    if (!userDoc.exists) {
+      return res.status(404).send({ error: "Usuário não encontrado!" });
+    }
+
+    // Obter os dados do usuário
+    const userData = userDoc.data();
+
+    // Comparar a senha atual com o hash armazenado
+    const senhaValida = await bcrypt.compare(senhaAtual, userData.senha);
+
+    if (!senhaValida) {
+      return res.status(401).send({ error: "Senha atual incorreta!" });
+    }
+
+    // Hashear a nova senha
+    const novaSenhaHash = await bcrypt.hash(novaSenha, 10);
+
+    // Atualizar a senha no Firestore
+    await db.collection("usuarios").doc(userId).update({
+      senha: novaSenhaHash,
+    });
+
+    return res.status(200).send({ message: "Senha atualizada com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao atualizar a senha:", error);
+    return res.status(500).send({ error: "Erro interno no servidor." });
+  }
+});
+
+
+
+
 // Rota para adicionar uma tarefa ao Firestore
 app.post("/api/tarefas", async (req, res) => {
   try {
