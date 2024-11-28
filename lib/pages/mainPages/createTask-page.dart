@@ -3,11 +3,16 @@ import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart'
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'; 
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz; 
 import 'package:intl/intl.dart'; // Importar para formatação de datas
+import 'dart:io';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8080/api';
-
 
   // Criar tarefa
   static Future<Map<String, dynamic>> createTask({
@@ -18,6 +23,7 @@ class ApiService {
     required String status,
     required String categoria,
   }) async {
+    print('Enviando solicitação para criar tarefa...');
     final url = Uri.parse('$baseUrl/tarefas');
     final response = await http.post(
       url,
@@ -32,15 +38,16 @@ class ApiService {
       }),
     );
 
+    print('Resposta recebida: ${response.statusCode}');
     if (response.statusCode == 201) {
+      print('Tarefa criada com sucesso.');
       return json.decode(response.body);
     } else {
+      print('Erro ao criar tarefa: ${response.body}');
       throw Exception('Erro ao criar tarefa: ${response.body}');
     }
   }
 }
-
-
 
 class Createtask extends StatelessWidget {
   final String userId; // Recebe o userId como argumento
@@ -66,7 +73,6 @@ class CreatetaskScreen extends StatefulWidget {
 }
 
 class _CreatetaskState extends State<CreatetaskScreen> {
-
   final _formKey = GlobalKey<FormState>();
   String _titulo = '';
   String _descricao = '';
@@ -77,52 +83,115 @@ class _CreatetaskState extends State<CreatetaskScreen> {
   String _categoria = 'Pessoal';
   List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
 
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
   @override
   void initState() {
     super.initState();
     _userId = widget.userId; // Inicializa o userId a partir do widget recebido
+    initializeNotifications();
+    requestExactAlarmPermission();
+  }
+
+  void initializeNotifications() async {
+    print('Inicializando notificações...');
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    tz.initializeTimeZones();
+    print('Notificações inicializadas com sucesso.');
+  }
+
+  Future<void> requestExactAlarmPermission() async {
+    if (Platform.isAndroid && (await Permission.scheduleExactAlarm.isDenied)) {
+      print('Solicitando permissão para agendar alarmes exatos...');
+      await Permission.scheduleExactAlarm.request();
+      if (await Permission.scheduleExactAlarm.isGranted) {
+        print('Permissão para agendar alarmes exatos concedida.');
+      } else {
+        print('Permissão para agendar alarmes exatos negada.');
+      }
+    }
   }
 
   Future<void> _saveTask() async {
-  if (_formKey.currentState?.validate() ?? false) {
-    _formKey.currentState?.save();
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
 
-    final horario = DateTime(
-      _dataLimite.year,
-      _dataLimite.month,
-      _dataLimite.day,
-      _horaLimite.hour,
-      _horaLimite.minute,
-    );
-
-    final formattedHorario = DateFormat('dd/MM/yyyy HH:mm').format(horario);
-
-    try {
-      await ApiService.createTask(
-        userId: _userId,
-        titulo: _titulo,
-        descricao: _descricao,
-        horario: formattedHorario,
-        status: _status,
-        categoria: _categoria,
-      );
-      print('Tarefa salva com sucesso');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tarefa criada com sucesso!')),
+      final horario = DateTime(
+        _dataLimite.year,
+        _dataLimite.month,
+        _dataLimite.day,
+        _horaLimite.hour,
+        _horaLimite.minute,
       );
 
-      Navigator.pop(context, true); // Retorna um indicador de sucesso
-    } catch (e) {
-      print('Erro ao salvar tarefa: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao criar tarefa!')),
-      );
+      final formattedHorario = DateFormat('dd/MM/yyyy HH:mm').format(horario);
+      print('Tentando salvar tarefa com título: $_titulo');
+
+      try {
+        await ApiService.createTask(
+          userId: _userId,
+          titulo: _titulo,
+          descricao: _descricao,
+          horario: formattedHorario,
+          status: _status,
+          categoria: _categoria,
+        );
+        print('Tarefa salva com sucesso');
+
+        // Agendar a notificação
+        print('Agendando notificação para a tarefa: $_titulo na data $horario');
+        await scheduleNotification(
+          'Tarefa Vencendo: $_titulo',
+          'Sua tarefa "$_titulo" está marcada para ${_horaLimite.format(context)}!',
+          horario,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Tarefa criada com sucesso!')),
+        );
+
+        Navigator.pop(context, true); // Retorna um indicador de sucesso
+      } catch (e) {
+        print('Erro ao salvar tarefa: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao criar tarefa!')),
+        );
+      }
     }
   }
-}
+
+  Future<void> scheduleNotification(String title, String body, DateTime scheduledDate) async {
+    print('Agendando notificação: $title para $scheduledDate');
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      0, // ID da notificação (pode ser único para cada tarefa)
+      title,
+      body,
+      tz.TZDateTime.from(scheduledDate, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'your_channel_id',
+          'your_channel_name',
+          channelDescription: 'your_channel_description',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time, // Para notificar no horário específico
+    );
+    print('Notificação agendada com sucesso para $scheduledDate');
+  }
 
   Future<void> _selectDateTime() async {
+    print('Abrindo seletor de data e hora...');
     final date = await showDatePicker(
       context: context,
       initialDate: _dataLimite,
@@ -139,6 +208,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
           _dataLimite = date;
           _horaLimite = time;
         });
+        print('Data e hora selecionadas: $_dataLimite $_horaLimite');
       }
     }
   }
@@ -171,6 +241,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                     _categorias.add(novaCategoria);
                     _categoria = novaCategoria; // Seleciona a nova categoria
                   });
+                  print('Nova categoria adicionada: $novaCategoria');
                 }
                 Navigator.of(context).pop();
               },
@@ -190,6 +261,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            print('Voltando para a tela anterior...');
             Navigator.pop(context); // Volta à tela anterior
           },
         ),
@@ -211,6 +283,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                 },
                 onSaved: (value) {
                   _titulo = value!;
+                  print('Título da tarefa salvo: $_titulo');
                 },
               ),
               SizedBox(height: 16.0),
@@ -219,6 +292,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                 maxLines: 5,
                 onSaved: (value) {
                   _descricao = value!;
+                  print('Descrição da tarefa salva: $_descricao');
                 },
               ),
               SizedBox(height: 16.0),
@@ -242,6 +316,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                 onChanged: (newValue) {
                   setState(() {
                     _status = newValue!;
+                    print('Status da tarefa alterado para: $_status');
                   });
                 },
               ),
@@ -261,6 +336,7 @@ class _CreatetaskState extends State<CreatetaskScreen> {
                       onChanged: (newValue) {
                         setState(() {
                           _categoria = newValue!;
+                          print('Categoria da tarefa alterada para: $_categoria');
                         });
                       },
                     ),
@@ -294,7 +370,10 @@ class SaveTaskButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         ),
-        onPressed: onPressed,
+        onPressed: () {
+          print('Botão de salvar tarefa pressionado');
+          onPressed();
+        },
         child: const Text(
           'Salvar',
           style: TextStyle(color: Colors.white),

@@ -4,6 +4,11 @@ import './login-page.dart';
 import './pages/register-page.dart';
 import './pages/recoveryPassword-page.dart';
 
+// para notificação
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
 void main() {
   runApp(MyApp());
 }
@@ -15,11 +20,25 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String? userId;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
+    initializeNotifications();
     checkUserLoggedIn();
+  }
+
+  void initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    tz.initializeTimeZones();
   }
 
   Future<void> checkUserLoggedIn() async {
@@ -43,17 +62,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-/** 
- * 
-      title: 'To do List',
-      theme: ThemeData(primarySwatch: Colors.orange),
-      home: MyHomePage(title: ''),
-      register: RegisterPage(),
-
-      initialRoute: '/',
-      routes: {
-      '/': (context) => MyHomePage(),
-      '/register': (context) => RegisterPage(),
-    }, 
-
- * **/
