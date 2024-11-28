@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
-import '../login-page.dart';
+import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import '../pages/recoveryPassword-page.dart';
 
 class UpdatePassword extends StatelessWidget {
   static String tag = 'update_password_page';
-  const UpdatePassword({Key? key}) : super(key: key);
+
+  final String userId;
+
+  const UpdatePassword({Key? key, required this.userId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,13 +19,16 @@ class UpdatePassword extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: const UpdatePasswordScreen(),
+      home: UpdatePasswordScreen(userId: userId),
     );
   }
 }
 
 class UpdatePasswordScreen extends StatefulWidget {
-  const UpdatePasswordScreen({Key? key}) : super(key: key);
+  final String userId;
+
+  const UpdatePasswordScreen({Key? key, required this.userId})
+      : super(key: key);
 
   @override
   _UpdatePasswordScreenState createState() => _UpdatePasswordScreenState();
@@ -31,6 +40,14 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
   final _novaSenhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
 
+  late String _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _userId = widget.userId; // Inicializa o userId recebido
+  }
+
   @override
   void dispose() {
     _senhaAntigaController.dispose();
@@ -39,19 +56,57 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
     super.dispose();
   }
 
+  Future<void> _alterarSenha() async {
+    final url = Uri.parse("http://10.0.2.2:8080/api/updatePassword");
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "userId": _userId,
+          "senhaAtual": _senhaAntigaController.text,
+          "novaSenha": _novaSenhaController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Senha alterada com sucesso!")),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InicialMainPage(userId: _userId),
+          ),
+        );
+      } else {
+        final errorResponse = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro: ${errorResponse['error']}")),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erro ao conectar ao servidor.")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text('Alterar Senha', style: TextStyle(color: Colors.white)),
+        title: const Text('Alterar Senha', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => MyHomePage()),
+              MaterialPageRoute(
+                builder: (context) => InicialMainPage(userId: _userId),
+              ),
             );
           },
         ),
@@ -101,25 +156,24 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                       return 'Por favor, confirme sua senha.';
                     }
                     if (value != _novaSenhaController.text) {
-                      return 'As senhas não coincidem.';
+                      return 'As senhas nÃ£o coincidem.';
                     }
                     return null;
                   },
                 ),
-                ForgotPasswordButton(),
+                const SizedBox(height: 16),
+                ForgotPasswordButton(userId: _userId),
                 const SizedBox(height: 40),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    textStyle: TextStyle(fontSize: 20),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 50, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 20),
                     backgroundColor: const Color.fromARGB(255, 255, 102, 14),
                   ),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Senha alterada com sucesso!')),
-                      );
+                      _alterarSenha();
                     }
                   },
                   child: const Text('Alterar Senha',
@@ -135,13 +189,19 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
 }
 
 class ForgotPasswordButton extends StatelessWidget {
+  final String userId;
+
+  const ForgotPasswordButton({Key? key, required this.userId}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: () {
         Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Recoverypassword()),
-          // MaterialPageRoute(builder: (context) => UpdatePassword()),
+          context,
+          MaterialPageRoute(
+            builder: (context) => Recoverypassword(),
+          ),
         );
       },
       child: const Text(
