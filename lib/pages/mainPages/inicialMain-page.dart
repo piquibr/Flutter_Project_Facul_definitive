@@ -266,7 +266,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ConfigScreen()),
+              MaterialPageRoute(builder: (context) => ConfigScreen(userId: userId)),
             );
           },
         ),
