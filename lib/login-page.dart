@@ -221,7 +221,7 @@ class ForgotPasswordButton extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => UpdatePassword()),
+          MaterialPageRoute(builder: (context) => Recoverypassword()),
         );
       },
       child: const Text(
