@@ -9,13 +9,12 @@ import { getAnalytics } from "firebase/analytics";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyB3yRcUD8VGA92UcVJUR8kFxcrct4x97Ok",
-  authDomain: "todolist-30df2.firebaseapp.com",
-  projectId: "todolist-30df2",
-  storageBucket: "todolist-30df2.firebasestorage.app",
-  messagingSenderId: "40562822029",
-  appId: "1:40562822029:web:e42454f807839b60a00bc4",
-  measurementId: "G-C9YRTBHLYV"
+  apiKey: "AIzaSyAq9fhnLycQGqhieg3isiU2uSStZEbphM8",
+  authDomain: "todoolistnv.firebaseapp.com",
+  projectId: "todoolistnv",
+  storageBucket: "todoolistnv.firebasestorage.app",
+  messagingSenderId: "346458540439",
+  appId: "1:346458540439:web:c787c2a96721608c711cd2"
 };
 
 // Initialize Firebase
