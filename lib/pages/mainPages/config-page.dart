@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project_todo_list/login-page.dart';
+import 'package:flutter_project_todo_list/notification.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/help-page.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
 import 'package:flutter_project_todo_list/pages/recoveryPassword-page.dart';
@@ -75,6 +76,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
             trailing: Switch(
               value: true, // Valor atual da configuração de notificações
               onChanged: (value) {
+                
                 // Lógica para ativar/desativar notificações
               },
               activeTrackColor: const Color.fromARGB(255, 255, 102, 14),
@@ -89,7 +91,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HelpPage(title: 'Ajuda'),
+                  builder: (context) => //HelpPage(title: 'Ajuda')
+                  NotificationTestApp()
+                  ,
                 ),
               );
             },
