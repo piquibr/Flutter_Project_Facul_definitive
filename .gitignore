@@ -45,3 +45,4 @@ app.*.map.json
 /android/app/release
 
 express-firebase-api/google-services.json
+express-firebase-api/google-services.json
