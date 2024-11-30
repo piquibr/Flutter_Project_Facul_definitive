@@ -20,7 +20,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String? userId;
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -33,7 +34,8 @@ class _MyAppState extends State<MyApp> {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings = InitializationSettings(
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
     );
 
@@ -57,7 +59,9 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'To do List',
-      theme: ThemeData(primarySwatch: Colors.orange),
+      theme: AppTheme.lightTheme, // Tema claro
+      darkTheme: AppTheme.darkTheme, // Tema escuro
+      themeMode: ThemeMode.system, // Alterna com base no sistema
       home: userId == null ? MyHomePage() : InicialMain(userId: userId!),
     );
   }

@@ -87,8 +87,15 @@ class EmailInput extends StatelessWidget {
       ),
       child: TextFormField(
         controller: controller,
+        style: const TextStyle(
+          color: Colors.black, // Cor do texto inserido
+        ),
+        cursorColor: Colors.black, // Cor da barra do cursor
         decoration: const InputDecoration(
           labelText: 'Email/Telefone',
+          labelStyle: TextStyle(
+            color: Colors.black, // Cor do texto da label
+          ),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 10),
         ),
@@ -118,8 +125,15 @@ class PasswordInput extends StatelessWidget {
       child: TextFormField(
         controller: controller,
         obscureText: true,
+        cursorColor: Colors.black, // Cor da barra do cursor
+        style: const TextStyle(
+          color: Colors.black, // Cor do texto inserido
+        ),
         decoration: const InputDecoration(
           labelText: 'Senha',
+          labelStyle: TextStyle(
+            color: Colors.black, // Cor do texto da label
+          ),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 10),
         ),
@@ -155,7 +169,7 @@ class LoginButton extends StatelessWidget {
       print('Attempting login with email: $email');
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/login'), // Ajuste para o IP correto
+        Uri.parse('http://localhost:8080/login'), // Ajuste para o IP correto
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'senha': senha}),
       );

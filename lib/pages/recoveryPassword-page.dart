@@ -47,7 +47,7 @@ class _RecoverypasswordState extends State<RecoverypasswordScreen> {
       print('DEBUG: Tentando enviar email para: $email');
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/api/sendTemporaryPassword'),
+        Uri.parse('http://localhost:8080/api/sendTemporaryPassword'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"email": email}),
       );
@@ -70,7 +70,8 @@ class _RecoverypasswordState extends State<RecoverypasswordScreen> {
         final errorResponse = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao enviar o e-mail: ${errorResponse["error"] ?? "Erro desconhecido"}'),
+            content: Text(
+                'Erro ao enviar o e-mail: ${errorResponse["error"] ?? "Erro desconhecido"}'),
           ),
         );
         print('DEBUG: Erro ao enviar e-mail: ${errorResponse["error"]}');

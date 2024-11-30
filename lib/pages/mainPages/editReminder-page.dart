@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // Importar para formatação de datas
 
-
 DateTime parseDate(String dateString) {
   try {
     DateFormat format = DateFormat("dd/MM/yyyy HH:mm");
@@ -15,7 +14,7 @@ DateTime parseDate(String dateString) {
 }
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080/api';
+  static const String baseUrl = 'http://localhost:8080/api';
 
   // Criar lembrete
   static Future<Map<String, dynamic>> createReminder({
@@ -23,7 +22,6 @@ class ApiService {
     required String titulo,
     required String descricao,
     required String horario,
-
   }) async {
     final url = Uri.parse('$baseUrl/lembretes');
     final response = await http.post(
@@ -68,7 +66,8 @@ class ApiService {
   }
 
   // Obter detalhes da tarefa
-  static Future<Map<String, dynamic>> getReminderDetails(String reminderId) async {
+  static Future<Map<String, dynamic>> getReminderDetails(
+      String reminderId) async {
     final url = Uri.parse('$baseUrl/lembrete/$reminderId');
     final response = await http.get(url);
 
@@ -84,12 +83,14 @@ class EditReminder extends StatelessWidget {
   final Map<String, dynamic>? reminder; // Adicionado para receber a lembrete
   final String userId;
 
-  const EditReminder({Key? key, this.reminder, required this.userId}) : super(key: key);
+  const EditReminder({Key? key, this.reminder, required this.userId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: reminder == reminder.toString() ? 'Novo Lembrete' : 'Editar Lembrete',
+      title:
+          reminder == reminder.toString() ? 'Novo Lembrete' : 'Editar Lembrete',
       home: CreateEditReminderScreen(reminder: reminder, userId: userId),
     );
   }
@@ -97,12 +98,15 @@ class EditReminder extends StatelessWidget {
 
 class CreateEditReminderScreen extends StatefulWidget {
   final String userId;
-  final Map<String, dynamic>? reminder; 
+  final Map<String, dynamic>? reminder;
 
-  const CreateEditReminderScreen({Key? key, required this.userId, this.reminder}) : super(key: key);
+  const CreateEditReminderScreen(
+      {Key? key, required this.userId, this.reminder})
+      : super(key: key);
 
   @override
-  _CreateEditReminderScreenState createState() => _CreateEditReminderScreenState();
+  _CreateEditReminderScreenState createState() =>
+      _CreateEditReminderScreenState();
 }
 
 class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
@@ -140,74 +144,82 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
   }
 
   void _initializeReminderData() {
-  if (widget.reminder != null) {
-    _titulo = widget.reminder!['titulo'] ?? '';
-    _descricao = widget.reminder!['descricao'] ?? '';
+    if (widget.reminder != null) {
+      _titulo = widget.reminder!['titulo'] ?? '';
+      _descricao = widget.reminder!['descricao'] ?? '';
 
-    _dataLimite = widget.reminder!['horario'] != null
-        ? parseDate(widget.reminder!['horario'])
-        : DateTime.now();
-    _horaLimite = TimeOfDay.fromDateTime(_dataLimite);
-  } else {
-    _titulo = '';
-    _descricao = '';
-    _dataLimite = DateTime.now();
-    _horaLimite = TimeOfDay.now();
-  }
+      _dataLimite = widget.reminder!['horario'] != null
+          ? parseDate(widget.reminder!['horario'])
+          : DateTime.now();
+      _horaLimite = TimeOfDay.fromDateTime(_dataLimite);
+    } else {
+      _titulo = '';
+      _descricao = '';
+      _dataLimite = DateTime.now();
+      _horaLimite = TimeOfDay.now();
+    }
 
     // Debug prints para verificar os dados recebidos
     print('User ID recebido: ${widget.userId}');
     print('Lembrete recebida: ${widget.reminder}');
   }
 
-Future<void> _saveReminder() async {
-  if (_formKey.currentState?.validate() ?? false) {
-    _formKey.currentState?.save();
+  Future<void> _saveReminder() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
 
-    final horario = DateTime(
-      _dataLimite.year,
-      _dataLimite.month,
-      _dataLimite.day,
-      _horaLimite.hour,
-      _horaLimite.minute,
-    );
-
-    final formattedHorario = DateFormat("dd/MM/yyyy HH:mm").format(horario);
-
-    try {
-      if (widget.reminder == null) {
-        await ApiService.createReminder(
-          userId: widget.userId,
-          titulo: _titulo,
-          descricao: _descricao,
-          horario: formattedHorario,
-        );
-        print('Novo lembrete criado com sucesso');
-      } else {
-        await ApiService.updateReminder(
-          reminderId: widget.reminder!['id'],
-          titulo: _titulo,
-          descricao: _descricao,
-          horario: formattedHorario,
-        );
-        print('Lembrete atualizada com sucesso');
-      }
-
-      Navigator.pop(context, true); // Retorna um indicador de sucesso
-    } catch (e) {
-      print('Erro ao salvar lembrete: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao salvar lembrete! Tente novamente.')),
+      final horario = DateTime(
+        _dataLimite.year,
+        _dataLimite.month,
+        _dataLimite.day,
+        _horaLimite.hour,
+        _horaLimite.minute,
       );
+
+      final formattedHorario = DateFormat("dd/MM/yyyy HH:mm").format(horario);
+
+      try {
+        if (widget.reminder == null) {
+          await ApiService.createReminder(
+            userId: widget.userId,
+            titulo: _titulo,
+            descricao: _descricao,
+            horario: formattedHorario,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Novo lembrete criado com sucesso!')),
+          );
+          print('Novo lembrete criado com sucesso');
+        } else {
+          await ApiService.updateReminder(
+            reminderId: widget.reminder!['id'],
+            titulo: _titulo,
+            descricao: _descricao,
+            horario: formattedHorario,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Lembrete atualizado com sucesso!')),
+          );
+          print('Lembrete atualizada com sucesso');
+        }
+
+        Navigator.pop(context, true); // Retorna um indicador de sucesso
+      } catch (e) {
+        print('Erro ao salvar lembrete: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar lembrete! Tente novamente.')),
+        );
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.reminder == null ? 'Novo Lembrete' : 'Editar Lembrete'),
+        title: Text(
+            widget.reminder == null ? 'Novo Lembrete' : 'Editar Lembrete',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
       ),
       body: Padding(
@@ -244,17 +256,23 @@ Future<void> _saveReminder() async {
                   _descricao = value!;
                 },
               ),
+              SizedBox(height: 16),
               TextButton.icon(
                 onPressed: _selectDateTime,
                 icon: Icon(Icons.calendar_today),
                 label: Text(
                     '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
               ),
-
               SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _saveReminder,
-                child: Text('Salvar'),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment
+                    .stretch, // Torna os filhos com largura total
+                children: [
+                  ElevatedButton(
+                    onPressed: _saveReminder,
+                    child: Text('Salvar'),
+                  ),
+                ],
               ),
             ],
           ),

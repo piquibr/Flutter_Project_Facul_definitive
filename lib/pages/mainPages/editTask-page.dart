@@ -14,7 +14,7 @@ DateTime parseDate(String dateString) {
 }
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080/api';
+  static const String baseUrl = 'http://localhost:8080/api';
 
   // Criar tarefa
   static Future<Map<String, dynamic>> createTask({
@@ -105,7 +105,8 @@ class CreateEditTaskScreen extends StatefulWidget {
   final String userId;
   final Map<String, dynamic>? task; // Tarefa opcional
 
-  const CreateEditTaskScreen({Key? key, required this.userId, this.task}) : super(key: key);
+  const CreateEditTaskScreen({Key? key, required this.userId, this.task})
+      : super(key: key);
 
   @override
   _CreateEditTaskScreenState createState() => _CreateEditTaskScreenState();
@@ -160,9 +161,10 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
           : _categorias.first; // Define um valor padrão se inválido
 
       // Outros campos
-      _status = ['Começar', 'Andamento', 'Concluída'].contains(widget.task!['status'])
-          ? widget.task!['status']
-          : 'Começar';
+      _status =
+          ['Começar', 'Andamento', 'Concluída'].contains(widget.task!['status'])
+              ? widget.task!['status']
+              : 'Começar';
       _dataLimite = widget.task!['horario'] != null
           ? parseDate(widget.task!['horario'])
           : DateTime.now();
@@ -205,6 +207,9 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
             status: _status,
             categoria: _categoria,
           );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tarefa criada com sucesso!')),
+          );
           print('Nova tarefa criada com sucesso');
         } else {
           await ApiService.updateTask(
@@ -214,6 +219,9 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
             horario: formattedHorario,
             status: _status,
             categoria: _categoria,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tarefa atualizada com sucesso!')),
           );
           print('Tarefa atualizada com sucesso');
         }
@@ -233,7 +241,7 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.task == null ? 'Nova Tarefa' : 'Editar Tarefa'),
-        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+        //backgroundColor: const Color.fromARGB(255, 255, 102, 14),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -278,7 +286,9 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
                 ),
                 SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _status.isNotEmpty && ['Começar', 'Andamento', 'Concluída'].contains(_status)
+                  value: _status.isNotEmpty &&
+                          ['Começar', 'Andamento', 'Concluída']
+                              .contains(_status)
                       ? _status
                       : 'Começar', // Define um valor padrão válido
                   decoration: InputDecoration(labelText: 'Status'),
@@ -296,9 +306,11 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
                 ),
                 SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _categoria.isNotEmpty && _categorias.contains(_categoria)
-                      ? _categoria
-                      : _categorias.first, // Define o primeiro valor como padrão
+                  value:
+                      _categoria.isNotEmpty && _categorias.contains(_categoria)
+                          ? _categoria
+                          : _categorias
+                              .first, // Define o primeiro valor como padrão
                   decoration: InputDecoration(labelText: 'Categoria'),
                   items: _categorias
                       .map((categoria) => DropdownMenuItem(
@@ -313,9 +325,15 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
                   },
                 ),
                 SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _saveTask,
-                  child: Text('Salvar'),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment
+                      .stretch, // Torna os filhos com largura total
+                  children: [
+                    ElevatedButton(
+                      onPressed: _saveTask,
+                      child: Text('Salvar'),
+                    ),
+                  ],
                 ),
               ],
             ),

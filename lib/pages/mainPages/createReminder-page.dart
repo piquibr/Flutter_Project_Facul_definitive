@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; // Biblioteca para formatação de data e hora
+import 'package:intl/intl.dart';
+// Biblioteca para formatação de data e hora
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080/api';
+  static const String baseUrl = 'http://localhost:8080/api';
 
-// Criar lembrete
+  // Criar lembrete
   static Future<Map<String, dynamic>> createReminder({
     required String userId,
     required String titulo,
@@ -22,7 +23,7 @@ class ApiService {
           'userId': userId,
           'titulo': titulo,
           'descricao': descricao,
-          'horario': horario, // Alterado de dataHora para horario
+          'horario': horario,
         }),
       );
 
@@ -38,40 +39,28 @@ class ApiService {
   }
 }
 
-class CreateReminder extends StatelessWidget {
-  final String userId; // Recebe o userId como argumento
-  const CreateReminder({Key? key, required this.userId}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Novo Lembrete',
-      home: CreateReminderScreen(userId: userId),
-    );
-  }
-}
-
 class CreateReminderScreen extends StatefulWidget {
-  final String userId; // Recebe o userId como argumento
+  final String userId;
+
   const CreateReminderScreen({Key? key, required this.userId})
       : super(key: key);
 
   @override
-  _CreateReminderState createState() => _CreateReminderState();
+  _CreateReminderScreenState createState() => _CreateReminderScreenState();
 }
 
-class _CreateReminderState extends State<CreateReminderScreen> {
+class _CreateReminderScreenState extends State<CreateReminderScreen> {
   final _formKey = GlobalKey<FormState>();
   String _titulo = '';
   String _descricao = '';
   DateTime _dataLimite = DateTime.now();
   TimeOfDay _horaLimite = TimeOfDay.now();
-  late String _userId; // Para armazenar o userId localmente
+  late String _userId;
 
   @override
   void initState() {
     super.initState();
-    _userId = widget.userId; // Inicializa o userId a partir do widget recebido
+    _userId = widget.userId;
   }
 
   Future<void> _saveReminder() async {
@@ -88,22 +77,6 @@ class _CreateReminderState extends State<CreateReminderScreen> {
 
       final formattedHorario = DateFormat('dd/MM/yyyy HH:mm').format(horario);
 
-      // Exibe indicador de carregamento
-
-      /** 
-      
-            showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      );
-
-      */
-
       try {
         await ApiService.createReminder(
           userId: widget.userId,
@@ -111,21 +84,17 @@ class _CreateReminderState extends State<CreateReminderScreen> {
           descricao: _descricao,
           horario: formattedHorario,
         );
-        print('Lembrete salvo com sucesso');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lembrete criado com sucesso!')),
-      );
-
-      Navigator.pop(context, true); // Retorna um indicador de sucesso
-    } catch (e) {
-      print('Erro ao salvar Lembrete: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao criar Lembrete!')),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lembrete criado com sucesso!')),
+        );
+        Navigator.pop(context, true);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao criar lembrete!')),
+        );
+      }
     }
   }
-}
 
   Future<void> _selectDateTime() async {
     final date = await showDatePicker(
@@ -150,19 +119,16 @@ class _CreateReminderState extends State<CreateReminderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Novo Lembrete'),
-        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+        title: const Text('Novo Lembrete'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Volta à tela anterior
-          },
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -176,23 +142,27 @@ class _CreateReminderState extends State<CreateReminderScreen> {
                 validator: (value) =>
                     value!.isEmpty ? 'Por favor, insira um título' : null,
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               _buildTextField(
                 hint: 'Descrição',
                 onSaved: (value) => _descricao = value!,
                 maxLines: 5,
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               TextButton.icon(
                 onPressed: _selectDateTime,
-                icon: Icon(Icons.calendar_today),
+                style: Theme.of(context)
+                    .textButtonTheme
+                    .style, // Usa o estilo do AppTheme
+                icon: const Icon(Icons.calendar_today),
                 label: Text(
-                    '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
+                  '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}',
+                ),
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               SaveReminderButton(
                 onPressed: _saveReminder,
-              )
+              ),
             ],
           ),
         ),
@@ -206,9 +176,10 @@ class _CreateReminderState extends State<CreateReminderScreen> {
     String? Function(String?)? validator,
     int maxLines = 1,
   }) {
+    final theme = Theme.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
         borderRadius: BorderRadius.circular(8.0),
         color: const Color.fromARGB(40, 0, 0, 0),
       ),
@@ -238,14 +209,11 @@ class SaveReminderButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-        ),
+        style: Theme.of(context)
+            .elevatedButtonTheme
+            .style, // Usa o estilo do AppTheme
         onPressed: onPressed,
-        child: const Text(
-          'Salvar',
-          style: TextStyle(color: Colors.white),
-        ),
+        child: const Text('Salvar'),
       ),
     );
   }

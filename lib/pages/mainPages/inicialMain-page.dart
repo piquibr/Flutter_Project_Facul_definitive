@@ -8,39 +8,272 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 
-class InicialMain extends StatelessWidget {
-  static String tag = 'inicialMain_page';
+class InicialMain extends StatefulWidget {
   final String userId;
+
   const InicialMain({required this.userId, Key? key}) : super(key: key);
+
+  @override
+  _InicialMainState createState() => _InicialMainState();
+}
+
+class _InicialMainState extends State<InicialMain> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  void toggleTheme() {
+    setState(() {
+      _themeMode =
+          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Notas',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        brightness: Brightness.light,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: _themeMode, // Alterna o tema com base no estado
+      home: InicialMainPage(
+        userId: widget.userId,
+        toggleTheme: toggleTheme, // Passa a função de alternância para a página
       ),
-      darkTheme: ThemeData(
-        primarySwatch: Colors.grey,
-        brightness: Brightness.dark,
-      ),
-      themeMode: ThemeMode.light, // Define o tema inicial como claro
-      home: InicialMainPage(userId: userId),
     );
   }
 }
 
+class CustomColors extends ThemeExtension<CustomColors> {
+  final Color? containerBackgroundColor;
+  final Color? inputFillColor;
+  final Color? floatingActionButtonColor;
+  final Color? cardBackgroundColor;
+  final Color? cardBackgroundTaskColor;
+
+  const CustomColors({
+    this.containerBackgroundColor,
+    this.inputFillColor,
+    this.floatingActionButtonColor,
+    this.cardBackgroundColor,
+    this.cardBackgroundTaskColor,
+  });
+
+  @override
+  CustomColors copyWith({
+    Color? containerBackgroundColor,
+    Color? inputFillColor,
+    Color? floatingActionButtonColor,
+    Color? cardBackgroundColor,
+    Color? cardBackgroundTaskColor,
+  }) {
+    return CustomColors(
+      containerBackgroundColor:
+          containerBackgroundColor ?? this.containerBackgroundColor,
+      inputFillColor: inputFillColor ?? this.inputFillColor,
+      floatingActionButtonColor:
+          floatingActionButtonColor ?? this.floatingActionButtonColor,
+      cardBackgroundColor: cardBackgroundColor ?? this.cardBackgroundColor,
+      cardBackgroundTaskColor:
+          cardBackgroundTaskColor ?? this.cardBackgroundTaskColor,
+    );
+  }
+
+  @override
+  CustomColors lerp(ThemeExtension<CustomColors>? other, double t) {
+    if (other is! CustomColors) return this;
+    return CustomColors(
+      containerBackgroundColor: Color.lerp(
+          containerBackgroundColor, other.containerBackgroundColor, t),
+      inputFillColor: Color.lerp(inputFillColor, other.inputFillColor, t),
+      floatingActionButtonColor: Color.lerp(
+          floatingActionButtonColor, other.floatingActionButtonColor, t),
+      cardBackgroundColor:
+          Color.lerp(cardBackgroundColor, other.cardBackgroundColor, t),
+      cardBackgroundTaskColor:
+          Color.lerp(cardBackgroundTaskColor, other.cardBackgroundTaskColor, t),
+    );
+  }
+}
+
+class CustomButtonStyles extends ThemeExtension<CustomButtonStyles> {
+  final ButtonStyle? dialogButtonStyle;
+
+  const CustomButtonStyles({this.dialogButtonStyle});
+
+  @override
+  CustomButtonStyles copyWith({ButtonStyle? dialogButtonStyle}) {
+    return CustomButtonStyles(
+      dialogButtonStyle: dialogButtonStyle ?? this.dialogButtonStyle,
+    );
+  }
+
+  @override
+  CustomButtonStyles lerp(ThemeExtension<CustomButtonStyles>? other, double t) {
+    if (other is! CustomButtonStyles) return this;
+    return CustomButtonStyles(
+      dialogButtonStyle:
+          ButtonStyle.lerp(dialogButtonStyle, other.dialogButtonStyle, t),
+    );
+  }
+}
+
+class AppTheme {
+  static final lightTheme = ThemeData(
+    primarySwatch: Colors.orange,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      color: Color.fromARGB(255, 255, 102, 14),
+      iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+          color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.black, fontSize: 16),
+      bodyMedium: TextStyle(color: Colors.black),
+    ),
+    iconTheme: const IconThemeData(
+      color: Colors.black, // Cor padrão dos ícones no tema claro
+      size: 24.0,
+    ),
+    dialogTheme: const DialogTheme(
+      backgroundColor: Color.fromARGB(255, 245, 245, 245), // Fundo do diálogo
+      titleTextStyle: TextStyle(
+        color: Colors.black, // Cor do título no tema claro
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+      contentTextStyle: TextStyle(
+        color: Colors.black, // Cor do conteúdo no tema claro
+        fontSize: 16,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor:
+            const Color.fromARGB(255, 255, 102, 14), // Cor do botão salvar
+        foregroundColor: Colors.white, // Cor do texto no botão salvar
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.black, // Letra preta no botão "Selecionar Data"
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+      ),
+    ),
+    extensions: <ThemeExtension<dynamic>>[
+      CustomColors(
+        containerBackgroundColor: const Color.fromARGB(10, 255, 101, 14),
+        inputFillColor:
+            const Color.fromARGB(9, 255, 245, 239), // Cor do campo de entrada
+        floatingActionButtonColor: Colors.grey[700], // Cor do FAB no tema claro
+        cardBackgroundColor: const Color.fromARGB(
+            230, 255, 212, 189), // Cor do Card no tema claro
+        cardBackgroundTaskColor: const Color.fromARGB(
+            230, 168, 166, 165), // Cor do TaskCard no tema claro
+      ),
+      CustomButtonStyles(
+        dialogButtonStyle: TextButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+          foregroundColor: Colors.white, // Cor do texto
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  static final darkTheme = ThemeData(
+    primarySwatch: Colors.grey,
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: const Color.fromARGB(255, 96, 96, 96),
+    appBarTheme: const AppBarTheme(
+      color: Color.fromARGB(255, 33, 33, 33),
+      iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+          color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.white, fontSize: 16),
+      bodyMedium: TextStyle(color: Colors.white),
+    ),
+    iconTheme: const IconThemeData(
+      color: Colors.white, // Cor padrão dos ícones no tema escuro
+      size: 24.0,
+    ),
+    dialogTheme: const DialogTheme(
+      backgroundColor: Color.fromARGB(255, 48, 48, 48), // Fundo do diálogo
+      titleTextStyle: TextStyle(
+        color: Colors.white, // Cor do título no tema escuro
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+      contentTextStyle: TextStyle(
+        color: Colors.white, // Cor do conteúdo no tema escuro
+        fontSize: 16,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor:
+            const Color.fromARGB(255, 255, 102, 14), // Cor do botão salvar
+        foregroundColor: Colors.white, // Cor do texto no botão salvar
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.white, // Letra branca no tema escuro
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+      ),
+    ),
+    extensions: <ThemeExtension<dynamic>>[
+      CustomColors(
+        containerBackgroundColor: const Color.fromARGB(255, 255, 4, 4),
+        inputFillColor:
+            const Color.fromARGB(255, 223, 223, 223), // Cor do campo de entrada
+        floatingActionButtonColor: const Color.fromARGB(
+            255, 255, 102, 14), // Cor do FAB no tema escuro
+        cardBackgroundColor: const Color.fromARGB(
+            255, 255, 135, 23), // Cor do Card no tema escuro
+        cardBackgroundTaskColor: const Color.fromARGB(
+            255, 251, 198, 198), // Cor do TaskCard no tema escuro
+      ),
+      CustomButtonStyles(
+        dialogButtonStyle: TextButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+          foregroundColor: Colors.white, // Cor do texto
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 class InicialMainPage extends StatefulWidget {
   final String userId;
+  final VoidCallback toggleTheme;
 
-  const InicialMainPage({required this.userId, Key? key}) : super(key: key);
+  const InicialMainPage({
+    required this.userId,
+    required this.toggleTheme,
+    Key? key,
+  }) : super(key: key);
+
   @override
   _InicialMainPageState createState() => _InicialMainPageState();
 }
 
 class _InicialMainPageState extends State<InicialMainPage> {
   late String userId = widget.userId;
+  bool isLoading = false;
 
   DateTime? startDate;
   DateTime? endDate;
@@ -49,14 +282,50 @@ class _InicialMainPageState extends State<InicialMainPage> {
   List filteredRemindersDisplay = [];
   List tasks = [];
   List filteredTasksDisplay = [];
-  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    userId = widget.userId;
     fetchReminders();
     fetchTasks();
+  }
+
+  Future<void> deleteReminder(String reminderId) async {
+    try {
+      final url =
+          Uri.parse('http://localhost:8080/api/lembretes/$userId/$reminderId');
+      final response = await http.delete(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          reminders.removeWhere((reminder) => reminder['id'] == reminderId);
+        });
+        print('Lembrete excluído com sucesso');
+      } else {
+        throw Exception('Erro ao excluir lembrete: ${response.body}');
+      }
+    } catch (e) {
+      print('Erro ao excluir lembrete: $e');
+    }
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    try {
+      final url =
+          Uri.parse('http://localhost:8080/api/tarefas/$userId/$taskId');
+      final response = await http.delete(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          tasks.removeWhere((task) => task['id'] == taskId);
+        });
+        print('Tarefa excluída com sucesso');
+      } else {
+        throw Exception('Erro ao excluir tarefa: ${response.body}');
+      }
+    } catch (e) {
+      print('Erro ao excluir tarefa: $e');
+    }
   }
 
   Future<void> fetchReminders() async {
@@ -65,7 +334,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
     });
 
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId'));
+      final response = await http
+          .get(Uri.parse('http://localhost:8080/api/lembretes/$userId'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -93,7 +363,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
     });
 
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId'));
+      final response = await http
+          .get(Uri.parse('http://localhost:8080/api/tarefas/$userId'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -112,42 +383,6 @@ class _InicialMainPageState extends State<InicialMainPage> {
         isLoading = false;
       });
       print('Error fetching tasks: $e');
-    }
-  }
-
-  Future<void> deleteReminder(String reminderId) async {
-    try {
-      final url = Uri.parse('http://10.0.2.2:8080/api/lembretes/$userId/$reminderId');
-      final response = await http.delete(url);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          reminders.removeWhere((reminder) => reminder['id'] == reminderId);
-        });
-        print('Lembrete excluído com sucesso');
-      } else {
-        throw Exception('Erro ao excluir lembrete: ${response.body}');
-      }
-    } catch (e) {
-      print('Erro ao excluir lembrete: $e');
-    }
-  }
-
-  Future<void> deleteTask(String taskId) async {
-    try {
-      final url = Uri.parse('http://10.0.2.2:8080/api/tarefas/$userId/$taskId');
-      final response = await http.delete(url);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          tasks.removeWhere((task) => task['id'] == taskId);
-        });
-        print('Tarefa excluída com sucesso');
-      } else {
-        throw Exception('Erro ao excluir tarefa: ${response.body}');
-      }
-    } catch (e) {
-      print('Erro ao excluir tarefa: $e');
     }
   }
 
@@ -171,18 +406,40 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   void applyFilters() {
     final List filteredReminders = reminders.where((reminder) {
-      final matchesStartDate = startDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(reminder['horario']).isAfter(startDate!) || DateFormat('dd/MM/yyyy HH:mm').parse(reminder['horario']).isAtSameMomentAs(startDate!);
-      final matchesEndDate = endDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(reminder['horario']).isBefore(endDate!.add(Duration(days: 1)));
+      final matchesStartDate = startDate == null ||
+          DateFormat('dd/MM/yyyy HH:mm')
+              .parse(reminder['horario'])
+              .isAfter(startDate!) ||
+          DateFormat('dd/MM/yyyy HH:mm')
+              .parse(reminder['horario'])
+              .isAtSameMomentAs(startDate!);
+      final matchesEndDate = endDate == null ||
+          DateFormat('dd/MM/yyyy HH:mm')
+              .parse(reminder['horario'])
+              .isBefore(endDate!.add(Duration(days: 1)));
       final matchesSearchText = searchText == null ||
-          reminder['titulo'].toLowerCase().contains(searchText!.toLowerCase()) ||
-          reminder['descricao'].toLowerCase().contains(searchText!.toLowerCase());
+          reminder['titulo']
+              .toLowerCase()
+              .contains(searchText!.toLowerCase()) ||
+          reminder['descricao']
+              .toLowerCase()
+              .contains(searchText!.toLowerCase());
 
       return matchesStartDate && matchesEndDate && matchesSearchText;
     }).toList();
 
     final List filteredTasks = tasks.where((task) {
-      final matchesStartDate = startDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(task['horario']).isAfter(startDate!) || DateFormat('dd/MM/yyyy HH:mm').parse(task['horario']).isAtSameMomentAs(startDate!);
-      final matchesEndDate = endDate == null || DateFormat('dd/MM/yyyy HH:mm').parse(task['horario']).isBefore(endDate!.add(Duration(days: 1)));
+      final matchesStartDate = startDate == null ||
+          DateFormat('dd/MM/yyyy HH:mm')
+              .parse(task['horario'])
+              .isAfter(startDate!) ||
+          DateFormat('dd/MM/yyyy HH:mm')
+              .parse(task['horario'])
+              .isAtSameMomentAs(startDate!);
+      final matchesEndDate = endDate == null ||
+          DateFormat('dd/MM/yyyy HH:mm')
+              .parse(task['horario'])
+              .isBefore(endDate!.add(Duration(days: 1)));
       final matchesSearchText = searchText == null ||
           task['titulo'].toLowerCase().contains(searchText!.toLowerCase()) ||
           task['descricao'].toLowerCase().contains(searchText!.toLowerCase());
@@ -200,22 +457,26 @@ class _InicialMainPageState extends State<InicialMainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notas', style: TextStyle(color: Colors.white)),
+        title: const Text('Notas'),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
         leading: IconButton(
-          icon: const Icon(Icons.density_medium_sharp, color: Colors.white),
+          icon: const Icon(Icons.density_medium_sharp),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ConfigScreen(userId: userId)),
+              MaterialPageRoute(
+                  builder: (context) => ConfigScreen(userId: userId)),
             );
           },
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.brightness_high),
-            onPressed: () {},
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.light
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+            ),
+            onPressed: widget.toggleTheme, // Alterna o tema
           ),
         ],
       ),
@@ -225,7 +486,9 @@ class _InicialMainPageState extends State<InicialMainPage> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: const Color.fromARGB(10, 255, 101, 14),
+                color: Theme.of(context)
+                    .extension<CustomColors>()
+                    ?.containerBackgroundColor,
                 borderRadius: BorderRadius.circular(25.0),
               ),
               child: TextField(
@@ -243,7 +506,9 @@ class _InicialMainPageState extends State<InicialMainPage> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.transparent,
+                  fillColor: Theme.of(context)
+                      .extension<CustomColors>()
+                      ?.inputFillColor, // Cor do campo de entrada
                 ),
               ),
             ),
@@ -297,7 +562,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
                                   startDate = null;
                                   endDate = null;
                                   searchText = null;
-                                  filteredRemindersDisplay = List.from(reminders);
+                                  filteredRemindersDisplay =
+                                      List.from(reminders);
                                   filteredTasksDisplay = List.from(tasks);
                                 });
                                 Navigator.of(context).pop();
@@ -316,13 +582,15 @@ class _InicialMainPageState extends State<InicialMainPage> {
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                      itemCount: filteredRemindersDisplay.length + filteredTasksDisplay.length,
+                      itemCount: filteredRemindersDisplay.length +
+                          filteredTasksDisplay.length,
                       itemBuilder: (context, index) {
                         if (index < filteredRemindersDisplay.length) {
                           final reminder = filteredRemindersDisplay[index];
                           return _buildReminderCard(reminder);
                         } else {
-                          final task = filteredTasksDisplay[index - filteredRemindersDisplay.length];
+                          final task = filteredTasksDisplay[
+                              index - filteredRemindersDisplay.length];
                           return _buildTaskCard(task);
                         }
                       },
@@ -332,7 +600,9 @@ class _InicialMainPageState extends State<InicialMainPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+        backgroundColor: Theme.of(context)
+            .extension<CustomColors>()
+            ?.floatingActionButtonColor,
         onPressed: () {
           showModalBottomSheet(
             context: context,
@@ -349,7 +619,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CreateReminderScreen(userId: userId),
+                            builder: (context) =>
+                                CreateReminderScreen(userId: userId),
                           ),
                         );
                         Navigator.pop(context);
@@ -366,7 +637,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CreatetaskScreen(userId: userId),
+                            builder: (context) =>
+                                CreatetaskScreen(userId: userId),
                           ),
                         );
                         Navigator.pop(context);
@@ -389,7 +661,7 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Widget _buildReminderCard(reminder) {
     return Card(
-      color: const Color.fromARGB(230, 255, 212, 189),
+      color: Theme.of(context).extension<CustomColors>()?.cardBackgroundColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -404,36 +676,35 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 Expanded(
                   child: Text(
                     reminder['titulo'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
                 Text(
                   reminder['horario'],
-                  style: const TextStyle(color: Colors.black),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Text(
               reminder['descricao'],
-              style: const TextStyle(color: Colors.black),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.black),
+                  icon: const Icon(Icons.more_vert),
                   onSelected: (value) async {
                     if (value == 'edit') {
                       final updated = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CreateEditReminderScreen(reminder: reminder, userId: userId),
+                          builder: (context) => CreateEditReminderScreen(
+                              reminder: reminder, userId: userId),
                         ),
                       );
 
@@ -446,7 +717,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
                         builder: (context) {
                           return AlertDialog(
                             title: const Text('Confirmar Exclusão'),
-                            content: const Text('Tem certeza de que deseja excluir este lembrete?'),
+                            content: const Text(
+                                'Tem certeza de que deseja excluir este lembrete?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
@@ -466,12 +738,15 @@ class _InicialMainPageState extends State<InicialMainPage> {
                           await deleteReminder(reminder['id'].toString());
                           fetchReminders();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Lembrete excluído com sucesso!')),
+                            const SnackBar(
+                                content:
+                                    Text('Lembrete excluído com sucesso!')),
                           );
                         } catch (e) {
                           print('Erro ao excluir Lembrete: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Erro ao excluir o lembrete!')),
+                            const SnackBar(
+                                content: Text('Erro ao excluir o lembrete!')),
                           );
                         }
                       }
@@ -498,7 +773,8 @@ class _InicialMainPageState extends State<InicialMainPage> {
 
   Widget _buildTaskCard(task) {
     return Card(
-      color: const Color.fromARGB(230, 249, 142, 84),
+      color:
+          Theme.of(context).extension<CustomColors>()?.cardBackgroundTaskColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -513,23 +789,21 @@ class _InicialMainPageState extends State<InicialMainPage> {
                 Expanded(
                   child: Text(
                     task['titulo'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
                 Text(
                   task['horario'],
-                  style: const TextStyle(color: Colors.black),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Text(
               task['descricao'],
-              style: const TextStyle(color: Colors.black),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 8),
             Row(
@@ -537,31 +811,27 @@ class _InicialMainPageState extends State<InicialMainPage> {
               children: [
                 Text(
                   'Status: ${task['status']}',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
-                    fontStyle: FontStyle.italic,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
+                      ),
                 ),
                 Text(
                   'Categoria: ${task['categoria']}',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
-                    fontStyle: FontStyle.italic,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
+                      ),
                 ),
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.black),
+                  icon: const Icon(Icons.more_vert),
                   onSelected: (value) async {
                     if (value == 'edit') {
                       final updated = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CreateEditTaskScreen(
-                            userId: userId,
-                            task: task,
-                          ),
+                          builder: (context) =>
+                              CreateEditTaskScreen(userId: userId, task: task),
                         ),
                       );
 
@@ -574,14 +844,21 @@ class _InicialMainPageState extends State<InicialMainPage> {
                         builder: (context) {
                           return AlertDialog(
                             title: const Text('Confirmar Exclusão'),
-                            content: const Text('Tem certeza de que deseja excluir esta tarefa?'),
+                            content: const Text(
+                                'Tem certeza de que deseja excluir esta tarefa?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
+                                style: Theme.of(context)
+                                    .extension<CustomButtonStyles>()
+                                    ?.dialogButtonStyle,
                                 child: const Text('Cancelar'),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(context, true),
+                                style: Theme.of(context)
+                                    .extension<CustomButtonStyles>()
+                                    ?.dialogButtonStyle,
                                 child: const Text('Excluir'),
                               ),
                             ],
@@ -594,12 +871,14 @@ class _InicialMainPageState extends State<InicialMainPage> {
                           await deleteTask(task['id'].toString());
                           fetchTasks();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Tarefa excluída com sucesso!')),
+                            const SnackBar(
+                                content: Text('Tarefa excluída com sucesso!')),
                           );
                         } catch (e) {
                           print('Erro ao excluir tarefa: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Erro ao excluir a tarefa!')),
+                            const SnackBar(
+                                content: Text('Erro ao excluir a tarefa!')),
                           );
                         }
                       }

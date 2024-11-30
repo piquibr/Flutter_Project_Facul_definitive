@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import '../pages/recoveryPassword-page.dart';
 
 class UpdatePassword extends StatelessWidget {
@@ -14,13 +13,7 @@ class UpdatePassword extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Recuperar Senha',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: UpdatePasswordScreen(userId: userId),
-    );
+    return UpdatePasswordScreen(userId: userId);
   }
 }
 
@@ -57,7 +50,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
   }
 
   Future<void> _alterarSenha() async {
-    final url = Uri.parse("http://10.0.2.2:8080/api/updatePassword");
+    final url = Uri.parse("http://localhost:8080/api/updatePassword");
 
     try {
       final response = await http.put(
@@ -77,7 +70,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => InicialMainPage(userId: _userId),
+            builder: (context) => InicialMain(userId: _userId),
           ),
         );
       } else {
@@ -95,22 +88,14 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Alterar Senha', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => InicialMainPage(userId: _userId),
-              ),
-            );
-          },
-        ),
+        title: const Text('Alterar Senha'),
       ),
+      backgroundColor:
+          theme.scaffoldBackgroundColor, // Altera a cor do fundo dinamicamente
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -120,12 +105,11 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                const Icon(Icons.lock_open, size: 80),
+                Icon(Icons.lock_open, size: 80, color: theme.iconTheme.color),
                 const SizedBox(height: 20),
-                TextFormField(
+                _buildPasswordField(
                   controller: _senhaAntigaController,
-                  decoration: const InputDecoration(labelText: 'Senha antiga'),
-                  obscureText: true,
+                  label: 'Senha antiga',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, insira sua senha antiga.';
@@ -134,10 +118,9 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildPasswordField(
                   controller: _novaSenhaController,
-                  decoration: const InputDecoration(labelText: 'Nova senha'),
-                  obscureText: true,
+                  label: 'Nova senha',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, insira sua nova senha.';
@@ -146,17 +129,15 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildPasswordField(
                   controller: _confirmarSenhaController,
-                  decoration:
-                      const InputDecoration(labelText: 'Confirmar senha'),
-                  obscureText: true,
+                  label: 'Confirmar senha',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, confirme sua senha.';
                     }
                     if (value != _novaSenhaController.text) {
-                      return 'As senhas nÃ£o coincidem.';
+                      return 'As senhas não coincidem.';
                     }
                     return null;
                   },
@@ -165,19 +146,13 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                 ForgotPasswordButton(userId: _userId),
                 const SizedBox(height: 40),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 50, vertical: 15),
-                    textStyle: const TextStyle(fontSize: 20),
-                    backgroundColor: const Color.fromARGB(255, 255, 102, 14),
-                  ),
+                  style: theme.elevatedButtonTheme.style,
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _alterarSenha();
                     }
                   },
-                  child: const Text('Alterar Senha',
-                      style: TextStyle(color: Colors.white)),
+                  child: const Text('Alterar Senha'),
                 ),
               ],
             ),
@@ -186,15 +161,39 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
       ),
     );
   }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    String? Function(String?)? validator,
+  }) {
+    final theme = Theme.of(context);
+
+    return TextFormField(
+      controller: controller,
+      obscureText: true,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        labelStyle: theme.textTheme.bodyMedium,
+      ),
+      validator: validator,
+    );
+  }
 }
 
 class ForgotPasswordButton extends StatelessWidget {
   final String userId;
 
-  const ForgotPasswordButton({Key? key, required this.userId}) : super(key: key);
+  const ForgotPasswordButton({Key? key, required this.userId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return TextButton(
       onPressed: () {
         Navigator.push(
@@ -204,9 +203,11 @@ class ForgotPasswordButton extends StatelessWidget {
           ),
         );
       },
-      child: const Text(
+      style: theme.textButtonTheme.style,
+      child: Text(
         'Esqueceu a sua senha?',
-        style: TextStyle(color: Colors.orange),
+        style: theme.textTheme.bodyMedium
+            ?.copyWith(color: theme.colorScheme.primary),
       ),
     );
   }

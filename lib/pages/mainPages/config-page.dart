@@ -13,10 +13,7 @@ class Config extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Configurações',
-      home: ConfigScreen(userId: userId),
-    );
+    return ConfigScreen(userId: userId);
   }
 }
 
@@ -31,6 +28,7 @@ class ConfigScreen extends StatefulWidget {
 
 class _ConfigScreenState extends State<ConfigScreen> {
   late String _userId;
+  bool _isDarkMode = false;
 
   @override
   void initState() {
@@ -38,22 +36,28 @@ class _ConfigScreenState extends State<ConfigScreen> {
     _userId = widget.userId; // Inicializa o userId recebido
   }
 
+  void _toggleDarkMode(bool value) {
+    setState(() {
+      _isDarkMode = value;
+    });
+    // Aqui você pode adicionar lógica adicional para persistir o estado
+    // de modo claro/escuro, como salvar em preferências do usuário.
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 102, 14),
+        backgroundColor: theme.appBarTheme.backgroundColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context); // Retorna à página anterior
           },
         ),
-        title: const Text(
-          'Configurações',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Configurações'),
       ),
       body: ListView(
         children: [
@@ -76,10 +80,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
             trailing: Switch(
               value: true, // Valor atual da configuração de notificações
               onChanged: (value) {
-                
                 // Lógica para ativar/desativar notificações
               },
-              activeTrackColor: const Color.fromARGB(255, 255, 102, 14),
+              activeTrackColor: Colors.orange,
               activeColor: Colors.white,
             ),
           ),
@@ -91,9 +94,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => //HelpPage(title: 'Ajuda')
-                  NotificationTestApp()
-                  ,
+                  builder: (context) => NotificationTestApp(),
                 ),
               );
             },
@@ -110,32 +111,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
             },
           ),
         ],
-      ),
-      bottomNavigationBar: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Switch(
-              value: true, // Valor atual do modo claro/escuro
-              onChanged: (value) {
-                // Lógica para alternar entre modo claro/escuro
-              },
-              activeTrackColor: const Color.fromARGB(255, 255, 102, 14),
-              activeColor: Colors.white,
-            ),
-            const SizedBox(width: 8.0),
-            const Text(
-              'Modo Claro',
-              style: TextStyle(
-                color: Color.fromARGB(255, 255, 102, 14),
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
