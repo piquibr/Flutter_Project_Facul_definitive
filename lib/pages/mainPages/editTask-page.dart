@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; // Importar para formatação de datas
+import 'package:intl/intl.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 DateTime parseDate(String dateString) {
   try {
@@ -14,9 +14,8 @@ DateTime parseDate(String dateString) {
 }
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://10.0.2.2:8080/api';
 
-  // Criar tarefa
   static Future<Map<String, dynamic>> createTask({
     required String userId,
     required String titulo,
@@ -46,7 +45,6 @@ class ApiService {
     }
   }
 
-  // Atualizar tarefa
   static Future<void> updateTask({
     required String taskId,
     required String titulo,
@@ -72,22 +70,10 @@ class ApiService {
       throw Exception('Erro ao atualizar tarefa: ${response.body}');
     }
   }
-
-  // Obter detalhes da tarefa
-  static Future<Map<String, dynamic>> getTaskDetails(String taskId) async {
-    final url = Uri.parse('$baseUrl/tarefas/$taskId');
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Erro ao obter detalhes da tarefa: ${response.body}');
-    }
-  }
 }
 
 class EditTask extends StatelessWidget {
-  final Map<String, dynamic>? task; // Adicionado para receber a tarefa
+  final Map<String, dynamic>? task;
   final String userId;
 
   const EditTask({Key? key, this.task, required this.userId}) : super(key: key);
@@ -95,7 +81,7 @@ class EditTask extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: task == task.toString() ? 'Nova Tarefa' : 'Editar Tarefa',
+      title: task == null ? 'Nova Tarefa' : 'Editar Tarefa',
       home: CreateEditTaskScreen(task: task, userId: userId),
     );
   }
@@ -103,7 +89,7 @@ class EditTask extends StatelessWidget {
 
 class CreateEditTaskScreen extends StatefulWidget {
   final String userId;
-  final Map<String, dynamic>? task; // Tarefa opcional
+  final Map<String, dynamic>? task;
 
   const CreateEditTaskScreen({Key? key, required this.userId, this.task})
       : super(key: key);
@@ -114,12 +100,59 @@ class CreateEditTaskScreen extends StatefulWidget {
 
 class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
   final _formKey = GlobalKey<FormState>();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   late String _titulo;
   late String _descricao;
   late DateTime _dataLimite;
   late TimeOfDay _horaLimite;
   late String _status;
   late String _categoria;
+
+  final List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+    _initializeTaskData();
+  }
+
+  void _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  void _initializeTaskData() {
+    if (widget.task != null) {
+      _titulo = widget.task!['titulo'] ?? '';
+      _descricao = widget.task!['descricao'] ?? '';
+      _categoria = _categorias.contains(widget.task!['categoria'])
+          ? widget.task!['categoria']
+          : _categorias.first;
+      _status =
+          ['Começar', 'Andamento', 'Concluída'].contains(widget.task!['status'])
+              ? widget.task!['status']
+              : 'Começar';
+      _dataLimite = widget.task!['horario'] != null
+          ? parseDate(widget.task!['horario'])
+          : DateTime.now();
+      _horaLimite = TimeOfDay.fromDateTime(_dataLimite);
+    } else {
+      _titulo = '';
+      _descricao = '';
+      _status = 'Começar';
+      _categoria = _categorias.first;
+      _dataLimite = DateTime.now();
+      _horaLimite = TimeOfDay.now();
+    }
+  }
 
   Future<void> _selectDateTime() async {
     final date = await showDatePicker(
@@ -140,47 +173,6 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
         });
       }
     }
-  }
-
-  final List<String> _categorias = ['Pessoal', 'Trabalho', 'Estudo'];
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeTaskData();
-  }
-
-  void _initializeTaskData() {
-    if (widget.task != null) {
-      _titulo = widget.task!['titulo'] ?? '';
-      _descricao = widget.task!['descricao'] ?? '';
-
-      // Validação do campo 'categoria'
-      _categoria = _categorias.contains(widget.task!['categoria'])
-          ? widget.task!['categoria']
-          : _categorias.first; // Define um valor padrão se inválido
-
-      // Outros campos
-      _status =
-          ['Começar', 'Andamento', 'Concluída'].contains(widget.task!['status'])
-              ? widget.task!['status']
-              : 'Começar';
-      _dataLimite = widget.task!['horario'] != null
-          ? parseDate(widget.task!['horario'])
-          : DateTime.now();
-      _horaLimite = TimeOfDay.fromDateTime(_dataLimite);
-    } else {
-      _titulo = '';
-      _descricao = '';
-      _status = 'Começar'; // Valor padrão
-      _categoria = _categorias.first; // Primeiro valor como padrão
-      _dataLimite = DateTime.now();
-      _horaLimite = TimeOfDay.now();
-    }
-
-    // Debug prints para verificar os dados recebidos
-    print('User ID recebido: ${widget.userId}');
-    print('Tarefa recebida: ${widget.task}');
   }
 
   Future<void> _saveTask() async {
@@ -210,7 +202,6 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Tarefa criada com sucesso!')),
           );
-          print('Nova tarefa criada com sucesso');
         } else {
           await ApiService.updateTask(
             taskId: widget.task!['id'],
@@ -223,16 +214,44 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Tarefa atualizada com sucesso!')),
           );
-          print('Tarefa atualizada com sucesso');
         }
 
-        Navigator.pop(context, true); // Retorna um indicador de sucesso
+        await _scheduleNotification(horario);
+
+        Navigator.pop(context, true);
       } catch (e) {
-        print('Erro ao salvar tarefa: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar tarefa! Tente novamente.')),
+          const SnackBar(
+              content: Text('Erro ao salvar tarefa! Tente novamente.')),
         );
       }
+    }
+  }
+
+  Future<void> _scheduleNotification(DateTime horario) async {
+    final difference = horario.difference(DateTime.now()).inSeconds;
+
+    if (difference > 0) {
+      Future.delayed(Duration(seconds: difference), () async {
+        await flutterLocalNotificationsPlugin.show(
+          1,
+          'Lembrete: $_titulo',
+          _descricao,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'task_channel',
+              'Tarefas',
+              channelDescription: 'Notificações de tarefas agendadas',
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+          ),
+        );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um horário no futuro.')),
+      );
     }
   }
 
@@ -241,7 +260,6 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.task == null ? 'Nova Tarefa' : 'Editar Tarefa'),
-        //backgroundColor: const Color.fromARGB(255, 255, 102, 14),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -253,78 +271,57 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
               children: [
                 TextFormField(
                   initialValue: _titulo,
-                  decoration: InputDecoration(labelText: 'Título'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, insira o título';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _titulo = value!;
-                  },
+                  decoration: const InputDecoration(labelText: 'Título'),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Insira o título' : null,
+                  onSaved: (value) => _titulo = value!,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 TextFormField(
                   initialValue: _descricao,
-                  decoration: InputDecoration(labelText: 'Descrição'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, insira a descrição';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _descricao = value!;
-                  },
+                  decoration: const InputDecoration(labelText: 'Descrição'),
+                  maxLines: 5,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Insira a descrição'
+                      : null,
+                  onSaved: (value) => _descricao = value!,
                 ),
                 TextButton.icon(
                   onPressed: _selectDateTime,
-                  icon: Icon(Icons.calendar_today),
+                  icon: const Icon(Icons.calendar_today),
                   label: Text(
-                      '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
+                    '${_dataLimite.day.toString().padLeft(2, '0')}/'
+                    '${_dataLimite.month.toString().padLeft(2, '0')}/'
+                    '${_dataLimite.year} '
+                    '${_horaLimite.hour.toString().padLeft(2, '0')}:'
+                    '${_horaLimite.minute.toString().padLeft(2, '0')}',
+                  ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _status.isNotEmpty &&
-                          ['Começar', 'Andamento', 'Concluída']
-                              .contains(_status)
-                      ? _status
-                      : 'Começar', // Define um valor padrão válido
-                  decoration: InputDecoration(labelText: 'Status'),
+                  value: _status,
+                  decoration: const InputDecoration(labelText: 'Status'),
                   items: ['Começar', 'Andamento', 'Concluída']
                       .map((status) => DropdownMenuItem(
                             value: status,
                             child: Text(status),
                           ))
                       .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _status = value!;
-                    });
-                  },
+                  onChanged: (value) => setState(() => _status = value!),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value:
-                      _categoria.isNotEmpty && _categorias.contains(_categoria)
-                          ? _categoria
-                          : _categorias
-                              .first, // Define o primeiro valor como padrão
-                  decoration: InputDecoration(labelText: 'Categoria'),
-                  items: _categorias
-                      .map((categoria) => DropdownMenuItem(
-                            value: categoria,
-                            child: Text(categoria),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _categoria = value!;
-                    });
-                  },
+                  value: _categoria,
+                  decoration: const InputDecoration(labelText: 'Categoria'),
+                  items: _categorias.map((categoria) {
+                    return DropdownMenuItem(
+                      value: categoria,
+                      child: Text(categoria),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _categoria = value!),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment
                       .stretch, // Torna os filhos com largura total

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project_todo_list/pages/mainPages/inicialMain-page.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // Importar para formatação de datas
@@ -14,9 +14,8 @@ DateTime parseDate(String dateString) {
 }
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://10.0.2.2:8080/api';
 
-  // Criar lembrete
   static Future<Map<String, dynamic>> createReminder({
     required String userId,
     required String titulo,
@@ -42,7 +41,6 @@ class ApiService {
     }
   }
 
-  // Atualizar lembrete
   static Future<void> updateReminder({
     required String reminderId,
     required String titulo,
@@ -64,44 +62,13 @@ class ApiService {
       throw Exception('Erro ao atualizar lembrete: ${response.body}');
     }
   }
-
-  // Obter detalhes da tarefa
-  static Future<Map<String, dynamic>> getReminderDetails(
-      String reminderId) async {
-    final url = Uri.parse('$baseUrl/lembrete/$reminderId');
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Erro ao obter detalhes da lembrete: ${response.body}');
-    }
-  }
-}
-
-class EditReminder extends StatelessWidget {
-  final Map<String, dynamic>? reminder; // Adicionado para receber a lembrete
-  final String userId;
-
-  const EditReminder({Key? key, this.reminder, required this.userId})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title:
-          reminder == reminder.toString() ? 'Novo Lembrete' : 'Editar Lembrete',
-      home: CreateEditReminderScreen(reminder: reminder, userId: userId),
-    );
-  }
 }
 
 class CreateEditReminderScreen extends StatefulWidget {
   final String userId;
   final Map<String, dynamic>? reminder;
 
-  const CreateEditReminderScreen(
-      {Key? key, required this.userId, this.reminder})
+  const CreateEditReminderScreen({Key? key, required this.userId, this.reminder})
       : super(key: key);
 
   @override
@@ -111,46 +78,47 @@ class CreateEditReminderScreen extends StatefulWidget {
 
 class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
   final _formKey = GlobalKey<FormState>();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   late String _titulo;
   late String _descricao;
   late DateTime _dataLimite;
   late TimeOfDay _horaLimite;
 
-  Future<void> _selectDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _dataLimite,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-    if (date != null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: _horaLimite,
-      );
-      if (time != null) {
-        setState(() {
-          _dataLimite = date;
-          _horaLimite = time;
-        });
-      }
-    }
-  }
-
   @override
   void initState() {
     super.initState();
+    _initializeNotifications();
     _initializeReminderData();
+  }
+
+  void _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
   void _initializeReminderData() {
     if (widget.reminder != null) {
       _titulo = widget.reminder!['titulo'] ?? '';
       _descricao = widget.reminder!['descricao'] ?? '';
+      try {
+        _dataLimite = widget.reminder!['horario'] != null
+            ? parseDate(widget.reminder!['horario'])
+            : DateTime.now();
 
-      _dataLimite = widget.reminder!['horario'] != null
-          ? parseDate(widget.reminder!['horario'])
-          : DateTime.now();
+        if (_dataLimite.isBefore(DateTime.now())) {
+          _dataLimite = DateTime.now();
+        }
+      } catch (e) {
+        _dataLimite = DateTime.now();
+      }
       _horaLimite = TimeOfDay.fromDateTime(_dataLimite);
     } else {
       _titulo = '';
@@ -158,10 +126,32 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
       _dataLimite = DateTime.now();
       _horaLimite = TimeOfDay.now();
     }
+  }
 
-    // Debug prints para verificar os dados recebidos
-    print('User ID recebido: ${widget.userId}');
-    print('Lembrete recebida: ${widget.reminder}');
+  Future<void> _selectDateTime() async {
+    final DateTime initialDate =
+        _dataLimite.isBefore(DateTime.now()) ? DateTime.now() : _dataLimite;
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (date != null) {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: _horaLimite,
+      );
+
+      if (time != null) {
+        setState(() {
+          _dataLimite = date;
+          _horaLimite = time;
+        });
+      }
+    }
   }
 
   Future<void> _saveReminder() async {
@@ -189,7 +179,6 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Novo lembrete criado com sucesso!')),
           );
-          print('Novo lembrete criado com sucesso');
         } else {
           await ApiService.updateReminder(
             reminderId: widget.reminder!['id'],
@@ -200,16 +189,43 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Lembrete atualizado com sucesso!')),
           );
-          print('Lembrete atualizada com sucesso');
         }
 
-        Navigator.pop(context, true); // Retorna um indicador de sucesso
+        await _scheduleNotification(horario);
+
+        Navigator.pop(context, true);
       } catch (e) {
-        print('Erro ao salvar lembrete: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar lembrete! Tente novamente.')),
+          const SnackBar(content: Text('Erro ao salvar lembrete! Tente novamente.')),
         );
       }
+    }
+  }
+
+  Future<void> _scheduleNotification(DateTime horario) async {
+    final difference = horario.difference(DateTime.now()).inSeconds;
+
+    if (difference > 0) {
+      Future.delayed(Duration(seconds: difference), () async {
+        await flutterLocalNotificationsPlugin.show(
+          1,
+          'Lembrete: $_titulo',
+          _descricao,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'reminder_channel',
+              'Lembretes',
+              channelDescription: 'Canal para lembretes agendados',
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+          ),
+        );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um horário no futuro.')),
+      );
     }
   }
 
@@ -219,7 +235,7 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
       appBar: AppBar(
         title: Text(
             widget.reminder == null ? 'Novo Lembrete' : 'Editar Lembrete',
-            style: TextStyle(color: Colors.white)),
+            style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 255, 102, 14),
       ),
       body: Padding(
@@ -231,7 +247,7 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
             children: [
               TextFormField(
                 initialValue: _titulo,
-                decoration: InputDecoration(labelText: 'Título'),
+                decoration: const InputDecoration(labelText: 'Título'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira o título';
@@ -242,10 +258,10 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
                   _titulo = value!;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 initialValue: _descricao,
-                decoration: InputDecoration(labelText: 'Descrição'),
+                decoration: const InputDecoration(labelText: 'Descrição'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira a descrição';
@@ -256,21 +272,26 @@ class _CreateEditReminderScreenState extends State<CreateEditReminderScreen> {
                   _descricao = value!;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextButton.icon(
                 onPressed: _selectDateTime,
-                icon: Icon(Icons.calendar_today),
+                icon: const Icon(Icons.calendar_today),
                 label: Text(
-                    '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}'),
+                  '${_dataLimite.day.toString().padLeft(2, '0')}/'
+                  '${_dataLimite.month.toString().padLeft(2, '0')}/'
+                  '${_dataLimite.year} '
+                  '${_horaLimite.hour.toString().padLeft(2, '0')}:' 
+                  '${_horaLimite.minute.toString().padLeft(2, '0')}',
+                ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
+            
               Column(
-                crossAxisAlignment: CrossAxisAlignment
-                    .stretch, // Torna os filhos com largura total
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ElevatedButton(
                     onPressed: _saveReminder,
-                    child: Text('Salvar'),
+                    child: const Text('Salvar'),
                   ),
                 ],
               ),

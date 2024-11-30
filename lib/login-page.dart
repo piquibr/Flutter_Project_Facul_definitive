@@ -169,7 +169,7 @@ class LoginButton extends StatelessWidget {
       print('Attempting login with email: $email');
 
       final response = await http.post(
-        Uri.parse('http://localhost:8080/login'), // Ajuste para o IP correto
+        Uri.parse('http://10.0.2.2:8080/login'), // Ajuste para o IP correto
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'senha': senha}),
       );

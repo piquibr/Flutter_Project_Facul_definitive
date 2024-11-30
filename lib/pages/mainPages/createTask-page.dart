@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://10.0.2.2:8080/api';
 
   static Future<Map<String, dynamic>> createTask({
     required String userId,
@@ -89,7 +87,6 @@ class _CreatetaskState extends State<CreatetaskScreen> {
         InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-    tz.initializeTimeZones();
   }
 
   Future<void> requestExactAlarmPermission() async {
@@ -123,15 +120,44 @@ class _CreatetaskState extends State<CreatetaskScreen> {
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tarefa criada com sucesso!')),
+          const SnackBar(content: Text('Tarefa criada com sucesso!')),
         );
+
+        await _scheduleNotification(horario);
 
         Navigator.pop(context, true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar tarefa!')),
+          const SnackBar(content: Text('Erro ao criar tarefa!')),
         );
       }
+    }
+  }
+
+  Future<void> _scheduleNotification(DateTime horario) async {
+    final difference = horario.difference(DateTime.now()).inSeconds;
+
+    if (difference > 0) {
+      Future.delayed(Duration(seconds: difference), () async {
+        await flutterLocalNotificationsPlugin.show(
+          1,
+          'Lembrete: $_titulo',
+          _descricao,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'reminder_channel',
+              'Tarefas',
+              channelDescription: 'Notificações de tarefas agendadas',
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+          ),
+        );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um horário no futuro.')),
+      );
     }
   }
 
@@ -156,48 +182,8 @@ class _CreatetaskState extends State<CreatetaskScreen> {
     }
   }
 
-  void _addCategoria() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String novaCategoria = '';
-        return AlertDialog(
-          title: Text('Adicionar Nova Categoria'),
-          content: TextField(
-            decoration: InputDecoration(hintText: 'Digite o nome da categoria'),
-            onChanged: (value) {
-              novaCategoria = value;
-            },
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancelar'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Adicionar'),
-              onPressed: () {
-                if (novaCategoria.isNotEmpty) {
-                  setState(() {
-                    _categorias.add(novaCategoria);
-                    _categoria = novaCategoria;
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nova Tarefa'),
@@ -225,9 +211,6 @@ class _CreatetaskState extends State<CreatetaskScreen> {
               TextButton.icon(
                 onPressed: _selectDateTime,
                 icon: const Icon(Icons.calendar_today),
-                style: Theme.of(context)
-                    .textButtonTheme
-                    .style, // Usa o estilo do AppTheme
                 label: Text(
                   '${_dataLimite.day}/${_dataLimite.month}/${_dataLimite.year} ${_horaLimite.format(context)}',
                 ),
