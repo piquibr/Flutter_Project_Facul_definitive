@@ -83,6 +83,7 @@ o Um link para a loja ou o local onde está publicada a APK
 o Um vídeo demo do App
 
 Como Configurar o Projeto Flutter na Sua Máquina
+
 1️⃣ Pré-requisitos Certifique-se de ter os seguintes itens instalados:
 
 Flutter SDK: flutter.dev Git: git-scm.com Editor de Código: VS Code ou Android Studio Java JDK 11+ (para Android): AdoptOpenJDK Xcode (para iOS, apenas no macOS): Instale pela App Store.
