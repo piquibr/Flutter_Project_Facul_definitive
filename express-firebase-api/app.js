@@ -54,6 +54,33 @@ const app = express();
 app.use(cors()); // Permite requisições de origens diferentes (CORS)
 app.use(express.json()); // Middleware para lidar com JSON
 
+// Rota para enviar sugestões por e-mail
+app.post("/api/sendSuggestion", async (req, res) => {
+  const { suggestion } = req.body;
+
+  if (!suggestion) {
+    return res.status(400).json({ error: "A sugestão é obrigatória!" });
+  }
+
+  try {
+    // Configura o e-mail com a sugestão
+    const mailOptions = {
+      from: "terrordoflutter@gmail.com",
+      to: "terrordoflutter@gmail.com",
+      subject: "Nova sugestão de usuário",
+      text: `Você recebeu uma nova sugestão: \n\n${suggestion}`,
+    };
+
+    // Envia o e-mail
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Sugestão enviada com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao enviar sugestão:", error);
+    res.status(500).json({ error: "Erro ao enviar sugestão." });
+  }
+});
+
 // Rota para adicionar um usuário ao Firestore
 app.post("/api/addUser", async (req, res) => {
   const { email, senha, telefone, nome } = req.body;

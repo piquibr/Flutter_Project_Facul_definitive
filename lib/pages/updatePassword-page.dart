@@ -50,7 +50,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
   }
 
   Future<void> _alterarSenha() async {
-    final url = Uri.parse("http://localhost:8080/api/updatePassword");
+    final url = Uri.parse("http://10.0.2.2:8080/api/updatePassword");
 
     try {
       final response = await http.put(
