@@ -12,7 +12,6 @@
 
 ### Dados App
 - Link Video - 
-- Link APK - 
 
 
 ### Requisitos do Aplicativo de To-Do List e Lembretes
