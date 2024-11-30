@@ -168,11 +168,9 @@ class AppTheme {
         containerBackgroundColor: const Color.fromARGB(10, 255, 101, 14),
         inputFillColor:
             const Color.fromARGB(9, 255, 245, 239), // Cor do campo de entrada
-        floatingActionButtonColor: Colors.grey[700], // Cor do FAB no tema claro
-        cardBackgroundColor: const Color.fromARGB(
-            230, 255, 212, 189), // Cor do Card no tema claro
-        cardBackgroundTaskColor: const Color.fromARGB(
-            230, 168, 166, 165), // Cor do TaskCard no tema claro
+        floatingActionButtonColor: const Color.fromARGB(255, 255, 102, 14), // Cor do FAB no tema claro
+        cardBackgroundColor: const Color.fromARGB(230, 255, 212, 189), // Cor do Card no tema claro
+        cardBackgroundTaskColor: const Color.fromARGB(255, 222, 171, 142), // Cor do TaskCard no tema claro
       ),
       CustomButtonStyles(
         dialogButtonStyle: TextButton.styleFrom(
@@ -189,7 +187,7 @@ class AppTheme {
   static final darkTheme = ThemeData(
     primarySwatch: Colors.grey,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: const Color.fromARGB(255, 96, 96, 96),
+    scaffoldBackgroundColor: const Color.fromARGB(255, 59, 58, 58),
     appBarTheme: const AppBarTheme(
       color: Color.fromARGB(255, 33, 33, 33),
       iconTheme: IconThemeData(color: Colors.white),
@@ -239,10 +237,8 @@ class AppTheme {
             const Color.fromARGB(255, 223, 223, 223), // Cor do campo de entrada
         floatingActionButtonColor: const Color.fromARGB(
             255, 255, 102, 14), // Cor do FAB no tema escuro
-        cardBackgroundColor: const Color.fromARGB(
-            255, 255, 135, 23), // Cor do Card no tema escuro
-        cardBackgroundTaskColor: const Color.fromARGB(
-            255, 251, 198, 198), // Cor do TaskCard no tema escuro
+        cardBackgroundColor: const Color.fromARGB(255, 95, 92, 90), // Cor do Card no tema escuro
+        cardBackgroundTaskColor: const Color.fromARGB(255, 43, 42, 42), // Cor do TaskCard no tema escuro
       ),
       CustomButtonStyles(
         dialogButtonStyle: TextButton.styleFrom(
